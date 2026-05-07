@@ -538,47 +538,63 @@ function cleanDate(v){
   }
   return v;
 }
-// ── JSONP helper (works from file://) ──────────────────────
-var _jsonpCallbacks={};
-var _jsonpCounter=0;
+// ── Fetch helper (works from https://) ────────────────────
 function jsonpCall(url, callback){
-  var cbName='_jcb'+(_jsonpCounter++);
-  _jsonpCallbacks[cbName]=function(data){
-    delete _jsonpCallbacks[cbName];
-    var el=document.getElementById('jsonp-'+cbName);
-    if(el)el.remove();
-    callback(null, data);
-  };
-  window[cbName]=_jsonpCallbacks[cbName];
-  var script=document.createElement('script');
-  script.id='jsonp-'+cbName;
-  script.onerror=function(e){
-    delete _jsonpCallbacks[cbName];
-    var el=document.getElementById('jsonp-'+cbName);
-    if(el)el.remove();
-    // Show the actual URL that failed in console
-    console.error('JSONP failed for URL:', script.src);
-    callback(new Error('JSONP error - ver consola para URL'));
-  };
-  var fullUrl=url+(url.includes('?')?'&':'?')+'callback='+cbName+'&_t='+Date.now()+'&_r='+Math.random().toString(36).slice(2);
-  console.log('JSONP request:', fullUrl.slice(0,120));
-  script.src=fullUrl;
-  document.head.appendChild(script);
-  // Timeout after 10 seconds
-  setTimeout(function(){
-    if(window[cbName]){
-      console.error('JSONP timeout for:', fullUrl.slice(0,120));
+  // Detectar si estamos en file:// → usar JSONP legacy
+  if(location.protocol === 'file:'){
+    var _jsonpCallbacks={};
+    var cbName='_jcb'+(Date.now());
+    _jsonpCallbacks[cbName]=function(data){
       delete _jsonpCallbacks[cbName];
-      delete window[cbName];
       var el=document.getElementById('jsonp-'+cbName);
       if(el)el.remove();
-      callback(new Error('Timeout - el servidor no respondió en 10s'));
-    }
-  },10000);
+      callback(null, data);
+    };
+    window[cbName]=_jsonpCallbacks[cbName];
+    var script=document.createElement('script');
+    script.id='jsonp-'+cbName;
+    script.onerror=function(){
+      delete _jsonpCallbacks[cbName];
+      var el=document.getElementById('jsonp-'+cbName);
+      if(el)el.remove();
+      callback(new Error('JSONP error'));
+    };
+    var fullUrl=url+(url.includes('?')?'&':'?')+'callback='+cbName+'&_t='+Date.now();
+    script.src=fullUrl;
+    document.head.appendChild(script);
+    setTimeout(function(){
+      if(window[cbName]){
+        delete _jsonpCallbacks[cbName];
+        delete window[cbName];
+        var el=document.getElementById('jsonp-'+cbName);
+        if(el)el.remove();
+        callback(new Error('Timeout'));
+      }
+    },15000);
+    return;
+  }
+  // Desde https:// usar fetch directo
+  fetch(url, {method:'GET', redirect:'follow'})
+    .then(function(r){ return r.json(); })
+    .then(function(data){ callback(null, data); })
+    .catch(function(err){ callback(new Error('Fetch error: '+err.message)); });
 }
 function apiCall(params, callback){
   var url=LS.get('cya3_api_url')||API;
   if(!url){callback(new Error('Sin URL'));return;}
+  // Desde https:// usar fetch con POST para enviar datos
+  if(location.protocol !== 'file:'){
+    fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(params),
+      redirect:'follow'
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){ callback(null, data); })
+    .catch(function(err){ callback(new Error('Fetch error: '+err.message)); });
+    return;
+  }
   var qs=new URLSearchParams({data:JSON.stringify(params)}).toString();
   jsonpCall(url+'?'+qs, callback);
 }
