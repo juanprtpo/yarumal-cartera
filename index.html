@@ -582,17 +582,14 @@ function jsonpCall(url, callback){
 function apiCall(params, callback){
   var url=LS.get('cya3_api_url')||API;
   if(!url){callback(new Error('Sin URL'));return;}
-  // Desde https:// usar fetch con POST para enviar datos
+  // Desde https:// usar fetch GET con parámetros en URL
   if(location.protocol !== 'file:'){
-    fetch(url, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(params),
-      redirect:'follow'
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(data){ callback(null, data); })
-    .catch(function(err){ callback(new Error('Fetch error: '+err.message)); });
+    var qs=new URLSearchParams({data:JSON.stringify(params)}).toString();
+    var fullUrl=url+'?'+qs+'&_t='+Date.now();
+    fetch(fullUrl, {method:'GET', redirect:'follow'})
+      .then(function(r){ return r.json(); })
+      .then(function(data){ callback(null, data); })
+      .catch(function(err){ callback(new Error('Fetch error: '+err.message)); });
     return;
   }
   var qs=new URLSearchParams({data:JSON.stringify(params)}).toString();
