@@ -405,6 +405,58 @@ textarea{resize:vertical;min-height:56px;}
   </div>
 </div>
 
+<!-- ══════════════ LOGIN SHA-256 — debe ejecutarse primero ══════════════ -->
+<script>
+(function(){
+  var PASS_HASH = '560ce7f992b413e78178474a7c6fd22a317f416091cef879842b2966571fc424';
+  var SESSION_KEY = 'cya3_auth_session';
+  var SESSION_DURATION = 8 * 60 * 60 * 1000;
+
+  async function sha256(str) {
+    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+  }
+  function sesionValida() {
+    try {
+      var s = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+      if (!s || !s.ts) return false;
+      return (Date.now() - s.ts) < SESSION_DURATION;
+    } catch(e) { return false; }
+  }
+  function mostrarApp() {
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app-wrapper').style.display = 'block';
+  }
+  window._loginVerified = false;
+  window.verificarLogin = async function() {
+    var pass = document.getElementById('login-pass').value;
+    var err  = document.getElementById('login-err');
+    if (!pass) { err.textContent = 'Ingresa la contraseña.'; return; }
+    err.textContent = '';
+    var hash = await sha256(pass);
+    if (hash === PASS_HASH) {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ts: Date.now()}));
+      window._loginVerified = true;
+      mostrarApp();
+      if (typeof window._initApp === 'function') window._initApp();
+    } else {
+      err.textContent = '✗ Contraseña incorrecta. Intenta de nuevo.';
+      document.getElementById('login-pass').value = '';
+      document.getElementById('login-pass').focus();
+    }
+  };
+  if (sesionValida()) {
+    window._loginVerified = true;
+    document.addEventListener('DOMContentLoaded', function() {
+      mostrarApp();
+      if (typeof window._initApp === 'function') window._initApp();
+    });
+  }
+})();
+</script>
+
+
+
 <script>
 
 
@@ -2150,7 +2202,8 @@ function limpiarYEliminarInvalidos(){
 }
 
 // ── INIT ─────────────────────────────────────────────────────
-(function init(){
+window._initApp = function init(){
+  if (!window._loginVerified) return; // No ejecutar sin login
   // ── Cargar desde localStorage si hay cache ──
   var cache=LS.get('cya3_pagares');
   if(cache&&cache.length>0){
@@ -2178,60 +2231,9 @@ function limpiarYEliminarInvalidos(){
     setSS('','Conectando con Sheets...');
     cargarDatos();
   }
-})();
-</script>
-
-<!-- ══════════════ SISTEMA DE LOGIN SHA-256 ══════════════ -->
-<script>
-(function(){
-  // ── HASH SHA-256 DE LA CONTRASEÑA ──────────────────────────────────────────
-  // Contraseña actual: Yarumal2025*
-  // Para cambiar: genera nuevo hash en https://emn178.github.io/online-tools/sha256.html
-  // y reemplaza el valor de PASS_HASH abajo.
-  var PASS_HASH = '560ce7f992b413e78178474a7c6fd22a317f416091cef879842b2966571fc424';
-
-  var SESSION_KEY = 'cya3_auth_session';
-  var SESSION_DURATION = 8 * 60 * 60 * 1000; // 8 horas
-
-  async function sha256(str) {
-    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-    return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
-  }
-
-  function sesionValida() {
-    try {
-      var s = JSON.parse(sessionStorage.getItem(SESSION_KEY));
-      if (!s || !s.ts) return false;
-      return (Date.now() - s.ts) < SESSION_DURATION;
-    } catch(e) { return false; }
-  }
-
-  function iniciarSesion() {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ts: Date.now()}));
-    document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('app-wrapper').style.display = 'block';
-  }
-
-  window.verificarLogin = async function() {
-    var pass = document.getElementById('login-pass').value;
-    var err  = document.getElementById('login-err');
-    if (!pass) { err.textContent = 'Ingresa la contraseña.'; return; }
-    err.textContent = '';
-    var hash = await sha256(pass);
-    if (hash === PASS_HASH) {
-      iniciarSesion();
-    } else {
-      err.textContent = '✗ Contraseña incorrecta. Intenta de nuevo.';
-      document.getElementById('login-pass').value = '';
-      document.getElementById('login-pass').focus();
-    }
-  };
-
-  // Verificar si ya hay sesión activa al cargar
-  if (sesionValida()) {
-    iniciarSesion();
-  }
-})();
+};
+// Ejecutar solo si ya hay sesión válida al cargar
+if (window._loginVerified) window._initApp();
 </script>
 
 </div><!-- /app-wrapper -->
