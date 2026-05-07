@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gestión de Cartera — Cooperativa de Yarumal</title>
+<style>
+:root{
+  --ink:#1a1a2e;--ink2:#2d3561;--ink3:#6b7280;
+  --red:#e63946;--red-l:#fde8ea;--green:#2a9d8f;--green-l:#e6f7f5;
+  --amber:#f4a261;--amber-l:#fef3e2;--blue:#457b9d;--blue-l:#e8f4f8;
+  --gold:#c9a84c;--cream:#f8f7f4;--white:#ffffff;
+  --bdr:#e5e7eb;--bdr2:#f3f4f6;--r:8px;--shadow:0 2px 8px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:#f0f0f5;color:var(--ink);min-height:100vh;display:flex;}
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px;background:var(--ink);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;}
+.sb-logo{padding:20px 16px 12px;border-bottom:1px solid rgba(255,255,255,.1);}
+.sb-logo h2{font-size:14px;font-weight:700;color:#fff;line-height:1.3;}
+.sb-logo p{font-size:11px;color:rgba(255,255,255,.5);margin-top:3px;}
+nav{flex:1;padding:8px 0;overflow-y:auto;}
+.ni{padding:10px 16px;font-size:13px;cursor:pointer;color:rgba(255,255,255,.7);border-radius:6px;margin:1px 8px;transition:all .2s;}
+.ni:hover{background:rgba(255,255,255,.1);color:#fff;}
+.ni.active{background:var(--blue);color:#fff;}
+.sb-user{padding:12px 16px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:rgba(255,255,255,.6);}
+.sb-user strong{display:block;color:#fff;font-size:13px;}
+/* MAIN */
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--white);border-bottom:1px solid var(--bdr);padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar h1{font-size:16px;font-weight:600;color:var(--ink);}
+#topbar-actions{display:flex;gap:8px;align-items:center;}
+#sync-status{font-size:11px;color:var(--ink3);padding:4px 8px;border-radius:20px;background:var(--bdr2);}
+#sync-status.e{background:var(--red-l);color:var(--red);}
+#content{flex:1;padding:20px;overflow-y:auto;}
+/* CARDS */
+.card{background:var(--white);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);margin-bottom:16px;}
+.ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.ch h3{font-size:14px;font-weight:600;color:var(--ink);}
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.sc{background:var(--white);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);}
+.sc.gold .sv{color:var(--gold);}
+.sc.red .sv{color:var(--red);}
+.sc.blue .sv{color:var(--blue);}
+.sc.green .sv{color:var(--green);}
+.sl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);}
+.sv{font-size:28px;font-weight:700;margin:4px 0;}
+.ss{font-size:11px;color:var(--ink3);}
+/* FILTERS */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+.filters input,.filters select{font-size:12px;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--cream);color:var(--ink);outline:none;}
+.filters input:focus,.filters select:focus{border-color:var(--blue);}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--r);font-size:12px;font-weight:500;border:none;cursor:pointer;transition:all .15s;}
+.btn.primary{background:var(--blue);color:#fff;}
+.btn.primary:hover{background:#3a6a8c;}
+.btn.sm{padding:4px 10px;font-size:11px;background:var(--bdr2);color:var(--ink2);}
+.btn.sm:hover{background:var(--bdr);}
+.btn.danger{background:var(--red-l);color:var(--red);}
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tbl th{text-align:left;padding:8px 10px;background:var(--cream);color:var(--ink3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--bdr);}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--bdr2);vertical-align:top;}
+.dr{cursor:pointer;transition:background .1s;}
+.dr:hover{background:var(--cream);}
+.tdi{display:flex;gap:6px;align-items:flex-start;}
+.tgl{font-size:10px;color:var(--ink3);transition:transform .2s;margin-top:2px;flex-shrink:0;}
+.tgl.open{transform:rotate(90deg);}
+/* EXPANDED PANEL */
+.exp-row td{padding:0;border-bottom:1px solid var(--bdr);}
+.exp-inner{display:none;padding:12px 16px 16px;background:#fafafa;gap:12px;flex-wrap:wrap;}
+.exp-inner.open{display:flex;}
+.es{flex:1;min-width:240px;max-width:400px;background:var(--white);border:1px solid var(--bdr);border-radius:var(--r);padding:12px;}
+.es h5{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:10px;}
+.ir{margin-bottom:6px;}
+.ik{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;}
+.iv{font-size:13px;color:var(--ink);}
+.ci{background:var(--cream);border-radius:6px;padding:8px 10px;margin-bottom:6px;}
+.ci-l{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;}
+.ci-v{font-size:14px;font-weight:600;color:var(--ink);}
+.ci.hl{background:var(--red-l);}
+.ci.hl .ci-v{color:var(--red);}
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
+.badge.prej{background:var(--amber-l);color:var(--amber);}
+.badge.jur{background:var(--red-l);color:var(--red);}
+.badge.acu{background:var(--green-l);color:var(--green);}
+.badge.ter{background:var(--bdr2);color:var(--ink3);}
+/* PROCESS BUTTONS */
+.pb{padding:5px 10px;border-radius:var(--r);font-size:11px;font-weight:600;border:2px solid var(--bdr);background:var(--white);cursor:pointer;transition:all .15s;}
+.pb.active-prej{background:var(--amber-l);border-color:var(--amber);color:var(--amber);}
+.pb.active-jur{background:var(--red-l);border-color:var(--red);color:var(--red);}
+.pb.active-acu{background:var(--green-l);border-color:var(--green);color:var(--green);}
+.pb.active-ter{background:var(--bdr2);border-color:var(--ink3);color:var(--ink3);}
+/* ACTS */
+.actsrow{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr2);cursor:pointer;transition:background .1s;}
+.actsrow:hover{background:var(--cream);}
+.adc{text-align:center;min-width:32px;}
+.ad{font-size:18px;font-weight:700;color:var(--ink);line-height:1;}
+.am{font-size:10px;color:var(--ink3);}
+.aline{width:2px;background:var(--bdr);border-radius:2px;flex-shrink:0;}
+.abody{flex:1;min-width:0;}
+.adesc{font-size:12px;color:var(--ink2);margin:2px 0;white-space:pre-wrap;word-break:break-word;}
+.ameta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px;}
+.at{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:500;background:var(--bdr2);color:var(--ink3);}
+.at.llamada{background:#e8f4f8;color:#457b9d;}
+.at.whatsapp{background:#e6f7f5;color:#2a9d8f;}
+.at.correo{background:#fef3e2;color:#f4a261;}
+.at.demanda,.at.memorial,.at.audiencia,.at.notificacion{background:var(--red-l);color:var(--red);}
+.at.acuerdo{background:var(--green-l);color:var(--green);}
+.at.terminacion{background:var(--bdr2);color:var(--ink3);}
+.aauth{font-size:10px;color:var(--ink3);background:var(--bdr2);padding:1px 6px;border-radius:10px;}
+.empty-acts{text-align:center;color:var(--ink3);padding:20px;font-size:13px;}
+/* MORA */
+.mt-alta{background:var(--red-l);color:var(--red);padding:1px 6px;border-radius:10px;font-size:11px;}
+.mt-med{background:var(--amber-l);color:var(--amber);padding:1px 6px;border-radius:10px;font-size:11px;}
+.mt-baja{background:var(--green-l);color:var(--green);padding:1px 6px;border-radius:10px;font-size:11px;}
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:10px 18px;border-radius:var(--r);font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;}
+#toast.show{opacity:1;}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal-box{background:#fff;border-radius:12px;padding:24px;width:340px;max-width:94vw;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+.modal-box h3{font-size:16px;font-weight:700;margin-bottom:16px;}
+.modal-box label{display:block;font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 4px;}
+.modal-box select,.modal-box input{width:100%;padding:8px 10px;border:1px solid var(--bdr);border-radius:var(--r);font-size:13px;}
+input[type=text],input[type=email],input[type=tel],textarea,select{padding:6px 8px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;width:100%;background:var(--white);}
+textarea{resize:vertical;min-height:56px;}
+/* SECTION EDIT */
+.sec-edit{font-size:11px;color:var(--blue);cursor:pointer;border:none;background:none;padding:0;}
+.sec-edit:hover{text-decoration:underline;}
+/* HIST */
+.hist-btn{margin-top:10px;padding:6px 12px;border:1px dashed var(--bdr);border-radius:var(--r);background:none;font-size:11px;color:var(--ink3);cursor:pointer;width:100%;}
+.hist-btn:hover{background:var(--cream);}
+/* RESPONSIVE */
+@media(max-width:900px){
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .sidebar{width:180px;min-width:180px;}
+  .main{margin-left:180px;}
+}
+</style>
+
+<!-- ══════════════ ESTILOS LOGIN ══════════════ -->
+<style>
+#login-overlay{
+  position:fixed;inset:0;background:linear-gradient(135deg,#1a1a2e 0%,#2d3561 100%);
+  display:flex;align-items:center;justify-content:center;z-index:9999;
+}
+#login-box{
+  background:#fff;border-radius:12px;padding:40px 36px;width:360px;max-width:94vw;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;
+}
+#login-box .lb-logo{font-size:13px;font-weight:700;color:#1a1a2e;line-height:1.3;margin-bottom:4px;}
+#login-box .lb-sub{font-size:11px;color:#6b7280;margin-bottom:28px;}
+#login-box .lb-title{font-size:18px;font-weight:700;color:#1a1a2e;margin-bottom:20px;}
+#login-box input[type=password]{
+  width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:8px;
+  font-size:14px;outline:none;margin-bottom:6px;transition:border .2s;
+}
+#login-box input[type=password]:focus{border-color:#457b9d;}
+#login-err{font-size:12px;color:#e63946;min-height:18px;margin-bottom:10px;display:block;}
+#login-box .lb-btn{
+  width:100%;padding:11px;background:#457b9d;color:#fff;border:none;border-radius:8px;
+  font-size:14px;font-weight:600;cursor:pointer;transition:background .2s;
+}
+#login-box .lb-btn:hover{background:#3a6a8c;}
+#login-box .lb-btn:active{transform:scale(.98);}
+#login-box .lb-footer{font-size:10px;color:#9ca3af;margin-top:20px;}
+#app-wrapper{display:none;}
+</style>
+
+</head>
+<body>
+
+<!-- ══════════════ PANTALLA DE LOGIN ══════════════ -->
+<div id="login-overlay">
+  <div id="login-box">
+    <div class="lb-logo">Merino Correa Abogados</div>
+    <div class="lb-sub">Cooperativa de Yarumal</div>
+    <div class="lb-title">🔒 Acceso seguro</div>
+    <input type="password" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')verificarLogin()">
+    <span id="login-err"></span>
+    <button class="lb-btn" onclick="verificarLogin()">Ingresar</button>
+    <div class="lb-footer">Gestión de Cartera — Acceso restringido</div>
+  </div>
+</div>
+
+<!-- ══════════════ APP PRINCIPAL ══════════════ -->
+<div id="app-wrapper">
+
+<div class="sidebar">
+  <div class="sb-logo">
+    <h2>Merino Correa<br>Abogados</h2>
+    <p>Cooperativa de Yarumal</p>
+  </div>
+  <nav>
+    <div class="ni active" onclick="navTo('dashboard',this)">📊 Dashboard</div>
+    <div class="ni" onclick="navTo('pagares',this)">📋 Pagarés / Deudores</div>
+    <div class="ni" onclick="navTo('actuaciones',this)">📝 Todas las actuaciones</div>
+    <div class="ni" onclick="navTo('informe',this)">📈 Informe general</div>
+  </nav>
+  <div class="sb-user">
+    <strong id="u-nombre-display">—</strong>
+    <span id="u-rol-display"></span>
+    <button class="btn sm" style="margin-top:6px;width:100%" onclick="openModal('modal-usuario')">Cambiar usuario</button>
+    <div style="margin-top:8px">
+      <button onclick="toggleConfig()" style="width:100%;background:none;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);border-radius:6px;padding:7px 10px;font-size:12px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center">
+        <span>⚙ Configuración</span><span id="cfg-arrow">▶</span>
+      </button>
+      <div id="cfg-panel" style="display:none;margin-top:6px;display:none">
+        <button class="btn sm" style="width:100%;margin-bottom:4px;background:var(--blue-l);color:var(--blue)" onclick="abrirConfig()">🔗 URL Apps Script</button>
+        <button class="btn sm" style="width:100%;margin-bottom:4px" onclick="testConexion()">🔌 Probar conexión</button>
+        <button class="btn sm" style="width:100%;margin-bottom:4px;background:#e8eaf6;color:#283593" onclick="limpiarCacheConexion()">🔄 Limpiar caché y reconectar</button>
+        <button class="btn sm" style="width:100%;margin-bottom:4px;background:#e0f7fa;color:#006064" onclick="detectarTodosJuzgados()">⚖ Detectar juzgados</button>
+        <button class="btn sm" style="width:100%;margin-bottom:4px;background:#e8f5e9;color:#2e7d32" onclick="repararEncabezadosSheet()">🔧 Reparar encabezados</button>
+        <button class="btn sm" style="width:100%;margin-bottom:4px;background:#fce4ec;color:#c62828" onclick="repararAlineacionSheet()">⚙ Reparar alineación</button>
+        <button class="btn sm" style="width:100%;margin-bottom:4px;background:#fff3e0;color:#e65100" onclick="diagnosticarSubida()">🔍 Diagnosticar</button>
+        <button class="btn sm" style="width:100%;background:#e8eaf6;color:#283593" onclick="testJuzgadoCompleto()">🔬 Test ciclo completo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h1 id="page-title">Dashboard</h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div id="topbar-actions"></div>
+      <div id="sync-status">—</div>
+      
+    </div>
+  </div>
+  <div id="content"></div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Modal usuario -->
+<div class="modal-overlay" id="modal-usuario">
+  <div class="modal-box">
+    <h3>¿Quién eres?</h3>
+    <label>Nombre</label>
+    <select id="u-nombre">
+      <option value="">— Seleccionar —</option>
+      <option>Juan Pablo Restrepo</option>
+      <option>Luis Fernando Merino</option>
+      <option>Sonia Restrepo</option>
+      <option>Verónica Salazar</option>
+    </select>
+    <label>Rol</label>
+    <select id="u-rol">
+      <option value="abogado">Abogado</option>
+      <option value="asistente">Asistente</option>
+    </select>
+    <button class="btn primary" style="width:100%;margin-top:16px" onclick="guardarUsuario()">Confirmar</button>
+  </div>
+</div>
+
+<!-- Modal configuración URL Apps Script -->
+<div class="modal-overlay" id="modal-config">
+  <div class="modal-box" style="width:520px;max-width:96vw">
+    <h3>⚙ Configurar conexión con Google Sheets</h3>
+    <p style="font-size:13px;color:var(--ink3);margin-bottom:16px;line-height:1.5">
+      Para sincronizar datos con Google Sheets necesitas una URL de Apps Script.<br>
+      Sigue estos pasos:
+    </p>
+    <ol style="font-size:12px;color:var(--ink2);margin:0 0 16px 16px;line-height:2">
+      <li>Ve a <strong>script.google.com</strong></li>
+      <li>Abre (o crea) tu proyecto y pega el código del archivo <code>apps_script_v3.js</code></li>
+      <li>En la línea 18 reemplaza <code>PEGA_AQUI_EL_ID_DE_TU_SHEET</code> por el ID de tu Google Sheet<br>
+        <span style="color:var(--ink3);font-size:11px">(El ID está en la URL de Sheets: docs.google.com/spreadsheets/d/<strong>ID_AQUÍ</strong>/edit)</span>
+      </li>
+      <li>Guarda con <strong>Ctrl+S</strong></li>
+      <li>Haz clic en <strong>Implementar → Nueva implementación</strong></li>
+      <li>Tipo: <strong>App web</strong> · Ejecutar como: <strong>Yo</strong> · Acceso: <strong>Cualquier persona</strong></li>
+      <li>Copia la URL generada y pégala abajo</li>
+    </ol>
+    <label style="font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px">URL del Apps Script</label>
+    <input type="text" id="cfg-url" placeholder="https://script.google.com/macros/s/..." style="width:100%;font-size:12px;padding:8px 10px;border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:16px">
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn sm" onclick="closeModal('modal-config')">Cancelar</button>
+      <button class="btn primary" onclick="guardarConfig()">Guardar y probar conexión</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nuevo pagaré -->
+<div class="modal-overlay" id="modal-nuevo-pagare">
+  <div class="modal-box" style="width:520px;max-width:96vw;max-height:90vh;overflow-y:auto">
+    <h3>Agregar pagaré manualmente</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div><label>N.° Pagaré *</label><input type="text" id="np-pagare" placeholder="Ej. 12345"></div>
+      <div><label>Entidad</label><input type="text" id="np-entidad" value="Cooperativa de Yarumal"></div>
+      <div><label>Nombre titular *</label><input type="text" id="np-nombre"></div>
+      <div><label>C.C.</label><input type="text" id="np-cc"></div>
+      <div><label>Teléfono</label><input type="text" id="np-tel"></div>
+      <div><label>Teléfono 2</label><input type="text" id="np-tel2"></div>
+      <div><label>Email</label><input type="email" id="np-email"></div>
+      <div><label>Ciudad</label><input type="text" id="np-ciudad"></div>
+      <div style="grid-column:1/-1"><label>Dirección</label><input type="text" id="np-dir"></div>
+      <div><label>Saldo capital</label><input type="text" id="np-capital" placeholder="$0"></div>
+      <div><label>Intereses</label><input type="text" id="np-intereses" placeholder="$0"></div>
+      <div><label>Capitalización</label><input type="text" id="np-capitaliz" placeholder="$0"></div>
+      <div><label>Total deuda</label><input type="text" id="np-total" placeholder="$0"></div>
+      <div><label>Inicio mora</label><input type="date" id="np-mora"></div>
+      <div><label>Último pago</label><input type="date" id="np-ultimo-pago"></div>
+      <div><label>Estado</label>
+        <select id="np-estado">
+          <option value="prejuridico">Prejurídico</option>
+          <option value="juridico">Jurídico</option>
+          <option value="acuerdo">Acuerdo</option>
+          <option value="terminado">Terminado</option>
+        </select>
+      </div>
+      <div><label>Abogado responsable</label>
+        <select id="np-abogado">
+          <option value="">— Sin asignar —</option>
+          <option>Juan Pablo Restrepo</option>
+          <option>Luis Fernando Merino</option>
+          <option>Sonia Restrepo</option>
+          <option>Verónica Salazar</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <label style="margin:0;font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em">Codeudores</label>
+        <button class="btn sm" onclick="agregarFilaCod()" type="button">+ Agregar codeudor</button>
+      </div>
+      <div id="np-cods-container"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn sm" onclick="closeModal('modal-nuevo-pagare')">Cancelar</button>
+      <button class="btn primary" onclick="guardarNuevoPagare()">Guardar pagaré</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal nueva actuación -->
+<div class="modal-overlay" id="modal-act">
+  <div class="modal-box" style="width:480px;max-width:96vw">
+    <h3 id="modal-act-title">Nueva actuación</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div>
+        <label style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:3px">Tipo</label>
+        <select id="act-tipo" style="width:100%">
+          <option value="llamada">📞 Llamada</option>
+          <option value="whatsapp">💬 WhatsApp</option>
+          <option value="correo">✉ Correo</option>
+          <option value="demanda">⚖ Demanda</option>
+          <option value="memorial">📝 Memorial</option>
+          <option value="audiencia">🏛 Audiencia</option>
+          <option value="notificacion">📬 Notificación</option>
+          <option value="acuerdo">🤝 Acuerdo de pago</option>
+          <option value="terminacion">✅ Terminación</option>
+          <option value="documento">📁 Documento</option>
+          <option value="visita">🏢 Visita</option>
+          <option value="otro">📌 Otro</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:3px">Fecha</label>
+        <input type="date" id="act-fecha" style="width:100%">
+      </div>
+    </div>
+    <label style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:3px">Descripción / Nota</label>
+    <textarea id="act-desc" rows="5" placeholder="Describe la gestión realizada... (sin límite de caracteres)" style="width:100%;margin-bottom:8px;min-height:80px;resize:vertical"></textarea>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div>
+        <label style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:3px">Resultado</label>
+        <select id="act-resultado" style="width:100%">
+          <option value="">— Sin resultado —</option>
+          <option value="exitoso">Exitoso</option>
+          <option value="sin-respuesta">Sin respuesta</option>
+          <option value="negativo">Negativo</option>
+          <option value="promesa-pago">Promesa de pago</option>
+          <option value="numero-errado">Dato errado</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:3px">Próxima acción</label>
+        <input type="date" id="act-proxima" style="width:100%">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px" id="act-acuerdo-row">
+      <div>
+        <label style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:3px">Fecha acuerdo</label>
+        <input type="date" id="act-acuerdo-fecha" style="width:100%">
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:3px">Valor acuerdo</label>
+        <input type="number" id="act-acuerdo-valor" placeholder="$" style="width:100%">
+      </div>
+    </div>
+    <div>
+      <label style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:3px">Juzgado (si aplica)</label>
+      <input type="text" id="act-juzgado" placeholder="Juzgado..." style="width:100%;margin-bottom:12px">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn sm" onclick="closeModal('modal-act')">Cancelar</button>
+      <button class="btn primary" onclick="guardarActuacion()">Guardar actuación</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ LOGIN SHA-256 — debe ejecutarse primero ══════════════ -->
+<script>
+(function(){
+  var PASS_HASH = '560ce7f992b413e78178474a7c6fd22a317f416091cef879842b2966571fc424';
+  var SESSION_KEY = 'cya3_auth_session';
+  var SESSION_DURATION = 8 * 60 * 60 * 1000;
+
+  async function sha256(str) {
+    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+  }
+  function sesionValida() {
+    try {
+      var s = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+      if (!s || !s.ts) return false;
+      return (Date.now() - s.ts) < SESSION_DURATION;
+    } catch(e) { return false; }
+  }
+  function mostrarApp() {
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app-wrapper').style.display = 'block';
+  }
+  window._loginVerified = false;
+  window.verificarLogin = async function() {
+    var pass = document.getElementById('login-pass').value;
+    var err  = document.getElementById('login-err');
+    if (!pass) { err.textContent = 'Ingresa la contraseña.'; return; }
+    err.textContent = '';
+    var hash = await sha256(pass);
+    if (hash === PASS_HASH) {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ts: Date.now()}));
+      window._loginVerified = true;
+      mostrarApp();
+      if (typeof window._initApp === 'function') window._initApp();
+    } else {
+      err.textContent = '✗ Contraseña incorrecta. Intenta de nuevo.';
+      document.getElementById('login-pass').value = '';
+      document.getElementById('login-pass').focus();
+    }
+  };
+  if (sesionValida()) {
+    window._loginVerified = true;
+    document.addEventListener('DOMContentLoaded', function() {
+      mostrarApp();
+      if (typeof window._initApp === 'function') window._initApp();
+    });
+  }
+})();
+</script>
+
+
+
+<script>
+
+
+
+
+
+
+
+
+
+
+
+
+// URL del Apps Script — se puede actualizar desde la interfaz (botón Configurar)
+var API = ""; // URL cargada en init() desde localStorage
+const LS={
+  get(k){try{return JSON.parse(localStorage.getItem(k));}catch{return null;}},
+  set(k,v){localStorage.setItem(k,JSON.stringify(v));}
+};
+
+// DATOS_EXCEL eliminado — datos cargados desde Google Sheets
+const DATOS_EXCEL = [];
+
+let pagares=[];
+let usuario=LS.get('cya3_usuario')||null;
+let currentView='dashboard';
+let currentPagId=null;
+let expandedRows=new Set();
+let busqueda='';
+let ordenTabla='pagare';
+let filtroEstado='todos';
+let filtroAbogado='todos';
+let filtroActivos=false;
+let filtroPrioritario='todos';
+let _actsSearch='';
+let _actsTipo='todos';
+let _actsFecha='';
+let _actPagIdModal=null;
+let _debounceTimers={};
+
+// ── CONSTANTES ──────────────────────────────────────────
+const ESTADO_LABEL={prejuridico:'Prejurídico',juridico:'Jurídico',acuerdo:'Acuerdo de pago',terminado:'Terminado'};
+const JUZGADOS={"051074089001": "JUZGADO 001 PROMISCUO MUNICIPAL DE BRICEÑO", "058874089001": "JUZGADO 001 PROMISCUO MUNICIPAL DE YARUMAL", "058874089002": "JUZGADO 002 PROMISCUO MUNICIPAL DE YARUMAL", "050884003001": "JUZGADO 001 CIVIL MUNICIPAL DE BELLO", "050884003002": "JUZGADO 002 CIVIL MUNICIPAL DE BELLO", "050884003003": "JUZGADO 003 CIVIL MUNICIPAL DE BELLO", "050884003004": "JUZGADO 004 CIVIL MUNICIPAL DE BELLO", "050884003005": "JUZGADO 005 CIVIL MUNICIPAL DE BELLO", "050884189001": "JUZGADO 001 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE BELLO", "050884189002": "JUZGADO 002 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE BELLO", "050014003001": "JUZGADO 001 CIVIL MUNICIPAL DE MEDELLÍN", "050014003002": "JUZGADO 002 CIVIL MUNICIPAL DE MEDELLÍN", "050014003003": "JUZGADO 003 CIVIL MUNICIPAL DE MEDELLÍN", "050014003004": "JUZGADO 004 CIVIL MUNICIPAL DE MEDELLÍN", "050014003005": "JUZGADO 005 CIVIL MUNICIPAL DE MEDELLÍN", "050014003006": "JUZGADO 006 CIVIL MUNICIPAL DE MEDELLÍN", "050014003007": "JUZGADO 007 CIVIL MUNICIPAL DE MEDELLÍN", "050014003008": "JUZGADO 008 CIVIL MUNICIPAL DE MEDELLÍN", "050014003009": "JUZGADO 009 CIVIL MUNICIPAL DE MEDELLÍN", "050014003010": "JUZGADO 010 CIVIL MUNICIPAL DE MEDELLÍN", "050014003011": "JUZGADO 011 CIVIL MUNICIPAL DE MEDELLÍN", "050014003012": "JUZGADO 012 CIVIL MUNICIPAL DE MEDELLÍN", "050014003013": "JUZGADO 013 CIVIL MUNICIPAL DE MEDELLÍN", "050014003014": "JUZGADO 014 CIVIL MUNICIPAL DE MEDELLÍN", "050014003015": "JUZGADO 015 CIVIL MUNICIPAL DE MEDELLÍN", "050014003016": "JUZGADO 016 CIVIL MUNICIPAL DE MEDELLÍN", "050014003017": "JUZGADO 017 CIVIL MUNICIPAL DE MEDELLÍN", "050014003018": "JUZGADO 018 CIVIL MUNICIPAL DE MEDELLÍN", "050014003019": "JUZGADO 019 CIVIL MUNICIPAL DE MEDELLÍN", "050014003020": "JUZGADO 020 CIVIL MUNICIPAL DE MEDELLÍN", "050014003021": "JUZGADO 021 CIVIL MUNICIPAL DE MEDELLÍN", "050014003022": "JUZGADO 022 CIVIL MUNICIPAL DE MEDELLÍN", "050014003023": "JUZGADO 023 CIVIL MUNICIPAL DE MEDELLÍN", "050014003024": "JUZGADO 024 CIVIL MUNICIPAL DE MEDELLÍN", "050014003025": "JUZGADO 025 CIVIL MUNICIPAL DE MEDELLÍN", "050014003026": "JUZGADO 026 CIVIL MUNICIPAL DE MEDELLÍN", "050014003027": "JUZGADO 027 CIVIL MUNICIPAL DE MEDELLÍN", "050014003028": "JUZGADO 028 CIVIL MUNICIPAL DE MEDELLÍN", "050014003029": "JUZGADO 029 CIVIL MUNICIPAL DE MEDELLÍN", "050014003030": "JUZGADO 030 CIVIL MUNICIPAL DE MEDELLÍN", "050014003031": "JUZGADO 031 CIVIL MUNICIPAL DE MEDELLÍN", "050014003032": "JUZGADO 032 CIVIL MUNICIPAL DE MEDELLÍN", "050014003033": "JUZGADO 033 CIVIL MUNICIPAL DE MEDELLÍN", "050014003034": "JUZGADO 034 CIVIL MUNICIPAL DE MEDELLÍN", "050014003035": "JUZGADO 035 CIVIL MUNICIPAL DE MEDELLÍN", "056314003001": "JUZGADO 001 CIVIL MUNICIPAL DE SABANETA", "056314003002": "JUZGADO 002 CIVIL MUNICIPAL DE SABANETA", "056314003003": "JUZGADO 003 CIVIL MUNICIPAL DE SABANETA", "056643189001": "JUZGADO 001 PROMISCUO DEL CIRCUITO DE SAN PEDRO DE LOS MILAGROS", "056644089001": "JUZGADO 001 PROMISCUO MUNICIPAL DE SAN PEDRO DE LOS MILAGROS", "050014189001": "JUZGADO 001 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189002": "JUZGADO 002 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189003": "JUZGADO 003 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189004": "JUZGADO 004 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189005": "JUZGADO 005 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189006": "JUZGADO 006 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189007": "JUZGADO 007 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189008": "JUZGADO 008 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189009": "JUZGADO 009 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189010": "JUZGADO 010 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189011": "JUZGADO 011 DE PEQUEÑAS CAUSAS Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014303001": "JUZGADO 001 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303002": "JUZGADO 002 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303003": "JUZGADO 003 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303004": "JUZGADO 004 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303005": "JUZGADO 005 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303006": "JUZGADO 006 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303007": "JUZGADO 007 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303008": "JUZGADO 008 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303009": "JUZGADO 009 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303010": "JUZGADO 010 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN"};
+const ETAPAS=['Elaboración de demanda','Presentación de demanda','Reparto y admisión','Notificación al demandado','Notificación al codeudor','Traslado de excepciones','Decreto de medidas cautelares','Embargo y secuestro de bienes','Audiencia inicial','Audiencia de instrucción y juzgamiento','Sentencia','Liquidación del crédito','Mandamiento de pago','Liquidación del crédito aprobada','Remate de bienes','Terminación por pago','Terminación por acuerdo','Archivo del proceso','Proceso suspendido'];
+const TIPO_LABEL={llamada:'Llamada',visita:'Visita',whatsapp:'WhatsApp',correo:'Correo',memorial:'Memorial',demanda:'Demanda',audiencia:'Audiencia',notificacion:'Notificación',acuerdo:'Acuerdo de pago',terminacion:'Terminación',documento:'Documento',otro:'Otro'};
+const TIPO_ICON={llamada:'📞',visita:'🏢',whatsapp:'💬',correo:'✉️',memorial:'📄',demanda:'⚖️',audiencia:'🏛️',notificacion:'📬',acuerdo:'🤝',terminacion:'✅',documento:'📁',otro:'📌'};
+const RES_LABEL={'exitoso':'✓ Exitoso','sin-respuesta':'Sin respuesta','negativo':'✗ Negativo','promesa-pago':'💬 Promesa de pago','numero-errado':'⚠ Dato errado'};
+const MOTIVO_LABEL={'pago-total':'Pago total','acuerdo-pago':'Acuerdo de pago','transaccion':'Transacción','desistimiento':'Desistimiento','prescripcion':'Prescripción','sentencia-absolutoria':'Sentencia absolutoria','otro':'Otro'};
+const ABOGADOS=['Juan Pablo Restrepo','Luis Fernando Merino','Sonia Restrepo','Verónica Salazar'];
+
+// ── HELPERS FINANCIEROS ─────────────────────────────────
+function parseCOP(v){
+  if(!v) return 0;
+  return parseFloat(String(v).replace(/[^0-9]/g,''))||0;
+}
+function fmtCOP(n){
+  return '$'+Math.round(n).toLocaleString('es-CO');
+}
+function calcHonorarios(p,pct){
+  var base=parseCOP(p.saldoCapital)+parseCOP(p.intereses)+parseCOP(p.capitalizacion);
+  var pctNum=parseFloat(String(pct||'').replace(/[^0-9.]/g,''))||0;
+  var hon=base*pctNum/100;
+  return {base:base,hon:hon,total:base+hon,pctNum:pctNum};
+}
+function cleanDate(v){
+  if(!v) return '';
+  v=String(v).trim();
+  // Fecha larga JS: "Fri Mar 20 2026 00:00:00 GMT..."
+  if(/[a-zA-Z]{3}/.test(v)&&v.length>15){
+    var d=new Date(v);
+    if(!isNaN(d)){
+      return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+    }
+    return '';
+  }
+  // yyyy-mm-dd → dd/mm/yyyy
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v)){
+    var p=v.split('-'); return p[2]+'/'+p[1]+'/'+p[0];
+  }
+  return v;
+}
+// ── JSONP helper (works from file://) ──────────────────────
+var _jsonpCallbacks={};
+var _jsonpCounter=0;
+function jsonpCall(url, callback){
+  var cbName='_jcb'+(_jsonpCounter++);
+  _jsonpCallbacks[cbName]=function(data){
+    delete _jsonpCallbacks[cbName];
+    var el=document.getElementById('jsonp-'+cbName);
+    if(el)el.remove();
+    callback(null, data);
+  };
+  window[cbName]=_jsonpCallbacks[cbName];
+  var script=document.createElement('script');
+  script.id='jsonp-'+cbName;
+  script.onerror=function(e){
+    delete _jsonpCallbacks[cbName];
+    var el=document.getElementById('jsonp-'+cbName);
+    if(el)el.remove();
+    // Show the actual URL that failed in console
+    console.error('JSONP failed for URL:', script.src);
+    callback(new Error('JSONP error - ver consola para URL'));
+  };
+  var fullUrl=url+(url.includes('?')?'&':'?')+'callback='+cbName+'&_t='+Date.now()+'&_r='+Math.random().toString(36).slice(2);
+  console.log('JSONP request:', fullUrl.slice(0,120));
+  script.src=fullUrl;
+  document.head.appendChild(script);
+  // Timeout after 10 seconds
+  setTimeout(function(){
+    if(window[cbName]){
+      console.error('JSONP timeout for:', fullUrl.slice(0,120));
+      delete _jsonpCallbacks[cbName];
+      delete window[cbName];
+      var el=document.getElementById('jsonp-'+cbName);
+      if(el)el.remove();
+      callback(new Error('Timeout - el servidor no respondió en 10s'));
+    }
+  },10000);
+}
+function apiCall(params, callback){
+  var url=LS.get('cya3_api_url')||API;
+  if(!url){callback(new Error('Sin URL'));return;}
+  var qs=new URLSearchParams({data:JSON.stringify(params)}).toString();
+  jsonpCall(url+'?'+qs, callback);
+}
+
+function toInputDate(v){
+  // Convert dd/mm/yyyy → yyyy-mm-dd for <input type="date"> value attribute
+  if(!v||v==='')return '';
+  v=String(v).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v; // already yyyy-mm-dd
+  if(/^\d{2}\/\d{2}\/\d{4}$/.test(v)){var p=v.split('/');return p[2]+'-'+p[1]+'-'+p[0];}
+  return '';
+}
+function toYMD(f){
+  if(!f) return '';
+  var p=f.split('/');
+  return p.length===3?p[2]+p[1]+p[0]:'';
+}
+function fday(f){if(!f||f==='—')return'—';var p=f.split('/');return p[0]||'—';}
+function fmon(f){var ms=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];if(!f)return'';var p=f.split('/');return ms[(parseInt(p[1])||1)-1]||'';}
+function fyr(f){if(!f)return'';var p=f.split('/');return p[2]||'';}
+function diasMora(fs){
+  if(!fs||fs==='—'||fs==='')return 0;
+  var p=fs.split('/');
+  var d=p.length===3?new Date(+p[2],+p[1]-1,+p[0]):new Date(fs);
+  return Math.max(0,Math.floor((new Date()-d)/(864e5)));
+}
+function moraHtml(dias){
+  if(dias>180)return'<span class="mt-alta">'+dias+' días</span>';
+  if(dias>30)return'<span class="mt-med">'+dias+' días</span>';
+  return'<span class="mt-baja">'+dias+' días</span>';
+}
+function estadoBadge(e){
+  var cls={prejuridico:'prej',juridico:'jur',acuerdo:'acu',terminado:'ter'};
+  return'<span class="badge '+(cls[e]||'prej')+'">'+(ESTADO_LABEL[e]||e)+'</span>';
+}
+function ir(k,v){
+  if(!v||v==='—'||v==='undefined'||v==='null')return'';
+  var cv=cleanDate(v);
+  return'<div class="ir"><div class="ik">'+k+'</div><div class="iv">'+cv+'</div></div>';
+}
+function toast(m){
+  var t=document.getElementById('toast');
+  t.textContent=m;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+function setSS(cls,msg){
+  var el=document.getElementById('sync-status');
+  el.textContent=msg;el.className=cls==='e'?'e':'';
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function debouncedSync(p,ms){
+  clearTimeout(_debounceTimers[p.pagare]);
+  _debounceTimers[p.pagare]=setTimeout(()=>syncPagare(p),ms||800);
+}
+
+// ── LOCAL STORAGE ────────────────────────────────────────
+function savePagaresLocal(){LS.set('cya3_pagares',pagares);}
+function sanitizarPagare(p){
+  var t=p.titular&&typeof p.titular==='object'?p.titular:{
+    nombre:p.titular_nombre||'',cc:p.titular_cc||'',lugarExpedicion:p.titular_lugarExpedicion||'',
+    direccion:p.titular_direccion||'',ciudad:p.titular_ciudad||'',
+    telefono:p.titular_telefono||'',email:p.titular_email||'',telefono2:p.titular_telefono2||''
+  };
+  var fe=cleanDate(p.fechaEstado||'');
+  var rad=String(p.radicadoRama||'').trim();
+  var etapa=String(p.etapaJuridica||'').trim();
+  // Si etapa tiene 20+ dígitos es un radicado mal ubicado
+  if(/^\d{20,}$/.test(etapa)){if(!rad||rad.length<10)rad=etapa;etapa='';}
+  if(/[a-zA-Z]/.test(rad)&&rad.length>15){rad='';}
+  var abonos=p.abonos||[];
+  if(typeof abonos==='string'){try{abonos=JSON.parse(abonos);}catch{abonos=[];}}
+  return Object.assign({},p,{
+    titular:t,
+    codeudores:Array.isArray(p.codeudores)?p.codeudores:
+      (function(){try{return JSON.parse(p.codeudores_json||'[]');}catch(e){return[];}}()),
+    actuaciones:(Array.isArray(p.actuaciones)?p.actuaciones:[]).map(function(a){
+      return Object.assign({},a,{fecha:cleanDate(a.fecha||'')});
+    }),
+    fechaEstado:fe,
+    radicadoRama:rad,
+    etapaJuridica:etapa,
+    suspenso:p.suspenso===true||p.suspenso==='true',
+    suspensoHasta:cleanDate(p.suspensoHasta||''),
+    pagadoTotal:p.pagadoTotal===true||p.pagadoTotal==='true',
+    pagadoTotalFecha:cleanDate(p.pagadoTotalFecha||''),
+    abonos:abonos,
+    abogadoResponsable:p.abogadoResponsable||'',
+    juzgado:p.juzgado||'',
+    honorariosPct:p.honorariosPct||'',
+    honCausados:(function(){var h=p.honCausados||[];if(typeof h==='string'){try{h=JSON.parse(h);}catch(e){h=[];}}return Array.isArray(h)?h:[];}()),
+    costas:p.costas||'',
+    gastos:(function(){var g=p.gastos||[];if(typeof g==='string'){try{g=JSON.parse(g);}catch(e){g=[];}}return Array.isArray(g)?g:[];}()),
+    pagoHonorariosRealizado:p.pagoHonorariosRealizado===true||p.pagoHonorariosRealizado==='true',
+    fechaDevolucionPagares:cleanDate(p.fechaDevolucionPagares||''),
+    notifDemandado:p.notifDemandado===true||p.notifDemandado==='true',
+    fechaIngreso:cleanDate(p.fechaIngreso||''),
+    pagaresUnificados:(function(){
+      var u=p.pagaresUnificados||[];
+      if(typeof u==='string'){try{u=JSON.parse(u);}catch(e){u=[];}}
+      return Array.isArray(u)?u.map(String):[];
+    }()),
+    hojaFisica:p.hojaFisica===true||p.hojaFisica==='true',
+    atencionPrioritaria:p.atencionPrioritaria===true||p.atencionPrioritaria==='true',
+    vigiladoLitigio:p.vigiladoLitigio===true||p.vigiladoLitigio==='true',
+    vigiladoPropio:p.vigiladoPropio===true||p.vigiladoPropio==='true',
+    notifCodeudores:(function(){var n=p.notifCodeudores||[];if(typeof n==='string'){try{n=JSON.parse(n);}catch(e){n=[];}}return Array.isArray(n)?n:[];}())
+  });
+}
+
+// ── API ──────────────────────────────────────────────────
+// apiPost replaced by direct fetch GET
+
+function syncPagare(p){
+  if(!p) return;
+  var url=LS.get('cya3_api_url')||API;
+  if(!url) return;
+  syncPagarePromise(p).then(function(ok){
+    if(ok) setSS('','✓ Guardado');
+    else setSS('e','Error al guardar');
+  });
+}
+function syncActuacion(pid,act){
+  if(!LS.get('cya3_api_url')&&!API) return;
+  var actData={
+    action:'saveActuacion',pagare:String(pid),
+    id:act.id||'',fecha:act.fecha||'',tipo:act.tipo||'',
+    desc:(act.desc||''),
+    resultado:act.resultado||'',proximaAccion:act.proximaAccion||'',
+    acuerdoFecha:act.acuerdoFecha||'',acuerdoValor:String(act.acuerdoValor||''),
+    juzgado:act.juzgado||'',autor:act.autor||''
+  };
+  apiCall(actData, function(err,d){
+    if(!err&&d&&d.ok)setSS('','✓ Guardado');else setSS('e','Error act');
+  });
+}
+
+// ── CARGA DE DATOS ───────────────────────────────────────
+function cargarDatos(){
+  var url=LS.get('cya3_api_url')||API;
+  if(!url){setSS('e','Sin URL');return;}
+  API=url;
+  setSS('','Cargando...');
+  jsonpCall(url+'?action=getAll', function(err, r){
+    if(err){setSS('e','Error: '+err.message);return;}
+    (function(r){
+    if(!r){setSS('e','Sin respuesta del servidor');return;}
+    // Handle both {pagares:[...]} and plain array responses
+    var rawPags = Array.isArray(r) ? r : (r.pagares || null);
+    if(!rawPags){
+      setSS('','✓ Sync (sin datos)');
+      if(r.error) toast('Error del servidor: '+r.error);
+      return;
+    }
+    if(rawPags.length===0){
+      setSS('','Sheets vacío — usando datos locales');
+      return;
+    }
+    // Filter out rows where pagare is not a valid number (e.g. text typed by mistake)
+    rawPags = rawPags.filter(function(p){
+      var pg = String(p.pagare||'').trim();
+      return pg.length > 0 && !isNaN(pg) && /^\d+$/.test(pg);
+    });
+    if(rawPags.length===0){
+      setSS('','Sheets sin pagarés válidos — revisa la columna pagare');
+      toast('⚠ No se encontraron pagarés con número válido en Sheets');
+      return;
+    }
+    var serverPags=rawPags.map(function(p){
+      return sanitizarPagare(p);
+    });
+    // Server gana SIEMPRE en todos los campos de datos
+    // Solo se preservan actuaciones locales si el servidor no tiene ninguna
+    var localCache=LS.get('cya3_pagares')||[];
+    pagares=serverPags.map(function(sp){
+      var local=localCache.find(function(lp){return String(lp.pagare)===String(sp.pagare);});
+      // Actuaciones: servidor gana si tiene; si no, usar las locales
+      var acts=(sp.actuaciones&&sp.actuaciones.length>0)
+        ? sp.actuaciones
+        : (local&&local.actuaciones&&local.actuaciones.length>0 ? local.actuaciones : []);
+      // Campos locales que no están en Sheets: honorarios, abogado, suspenso, abonos
+      // Estos sí se preservan del caché local si el servidor los trae vacíos
+      var honorariosPct = sp.honorariosPct||( local?local.honorariosPct||'':'');
+      // For fields that server returns empty but local has a value, keep local
+      // Server ALWAYS wins for all fields
+      // Local only used for actuaciones (if server has none)
+      // and for fields that truly don't come from server (honorariosPct, gastos, etc.)
+      var onlyLocalFields = ['honorariosPct','gastos','honCausados','costas'];
+      var extras = {actuaciones: acts};
+      // For fields that exist in Sheets: server wins if it has ANY value (including false/0)
+      // For fields only stored locally: preserve local value
+      onlyLocalFields.forEach(function(f){
+        var serverVal = sp[f];
+        var localVal  = local ? local[f] : undefined;
+        // These fields might not exist in old Sheets rows - preserve local if server empty
+        var isEmpty = serverVal === undefined || serverVal === null || serverVal === '' ||
+                     (Array.isArray(serverVal) && serverVal.length === 0);
+        extras[f] = isEmpty ? (localVal !== undefined ? localVal : serverVal) : serverVal;
+      });
+      return Object.assign({}, sp, extras);
+    });
+    // Agregar pagarés que están en local pero no en servidor (recién agregados manualmente)
+    var serverIds=new Set(serverPags.map(function(p){return String(p.pagare);}));
+    localCache.forEach(function(lp){
+      if(!serverIds.has(String(lp.pagare))){
+        pagares.push(sanitizarPagare(lp));
+      }
+    });
+    savePagaresLocal();
+    renderView();
+    setSS('','✓ Sync — '+pagares.length+' pagarés');
+    })(r);
+  });
+}
+
+function forzarSubida(){
+  setSS('','Cargando local...');
+  var cache=LS.get('cya3_pagares');
+  if(cache&&cache.length>0){
+    var seen=new Set();
+    pagares=cache.filter(function(p){
+      var k=String(p.pagare);if(seen.has(k))return false;seen.add(k);return true;
+    }).map(function(p){return sanitizarPagare(p);});
+    renderView();setSS('','✓ Local');
+  }
+  cargarDatos();
+}
+function subirTodoASheets(){
+  var url=LS.get('cya3_api_url')||'';
+  if(!url){toast('⚠ Configura primero la URL del Apps Script');openModal('modal-config');return;}
+  API=url;
+  if(!pagares||!pagares.length){toast('No hay datos para subir');return;}
+  var total=pagares.length;
+  var done=0;var errors=0;
+  var primerError=null;
+  setSS('','Preparando '+total+' pagarés...');
+  // Test with first pagare first to catch errors early
+  var p0=pagares[0];
+  var payload0=buildPayload(p0);
+  var params0=new URLSearchParams({data:JSON.stringify(payload0)});
+  apiCall(buildPayload(p0), function(err0,d){
+    if(err0){alert('Error de red al probar conexion:\n'+err0.message+'\n\nVerifica que la URL del Apps Script es correcta y esta actualizada.');setSS('e','Error red');return;}
+    if(!d||!d.ok){
+      alert('El servidor respondio con error para pagare '+p0.pagare+':\n\n'+JSON.stringify(d).slice(0,400));
+      setSS('e','Error: '+JSON.stringify(d).slice(0,60));return;
+    }
+    // First one OK - proceed with all
+    setSS('','1/'+total+' OK...');
+    function uploadNext(idx){
+      if(idx>=total){
+        if(errors===0){setSS('','✓ '+total+' subidos');toast('✓ Todos los pagarés subidos a Google Sheets');}
+        else{setSS('e',errors+' errores');toast(errors+' errores. Primer error: '+JSON.stringify(primerError).slice(0,80));}
+        return;
+      }
+      setSS('','Subiendo '+(idx+1)+'/'+total+'...');
+      apiCall(buildPayload(pagares[idx]), function(err,d){
+        done++;
+        if(!d||!d.ok){errors++;if(!primerError)primerError=d;}
+        setTimeout(function(){uploadNext(idx+1);},150);
+      })
+
+    }
+    uploadNext(1); // start from index 1 since 0 already done
+  })
+  .catch(function(e){
+    alert('Error de red al probar conexion:\n'+e.message+'\n\nVerifica que la URL del Apps Script es correcta y esta actualizada.');
+    setSS('e','Error red');
+  });
+}
+function buildPayload(p){
+  var t=(p.titular&&typeof p.titular==='object')?p.titular:{};
+  return {
+    action:'updatePagare',pagare:p.pagare,entidad:p.entidad||'',
+    titular_nombre:t.nombre||'',titular_cc:t.cc||'',titular_lugarExpedicion:t.lugarExpedicion||'',
+    titular_direccion:t.direccion||'',titular_ciudad:t.ciudad||'',
+    titular_telefono:t.telefono||'',titular_email:t.email||'',titular_telefono2:t.telefono2||'',
+    codeudores_json:JSON.stringify(p.codeudores||[]),
+    estadoProceso:p.estadoProceso||'prejuridico',etapaJuridica:p.etapaJuridica||'',
+    radicadoRama:p.radicadoRama||'',fechaEstado:cleanDate(p.fechaEstado||''),
+    medidasCautelares:String(p.medidasCautelares===true||p.medidasCautelares==='true'),
+    medidasTxt:p.medidasTxt||'',motivoTerminacion:p.motivoTerminacion||'',
+    honorariosPct:p.honorariosPct||'',abogadoResponsable:p.abogadoResponsable||'',juzgado:p.juzgado||'',
+    suspenso:String(p.suspenso===true||p.suspenso==='true'),suspensoHasta:cleanDate(p.suspensoHasta||''),
+    abonos:JSON.stringify(p.abonos||[]),
+    pagadoTotal:String(p.pagadoTotal===true||p.pagadoTotal==='true'),
+    pagadoTotalFecha:cleanDate(p.pagadoTotalFecha||''),
+    saldoCapital:p.saldoCapital||'',intereses:p.intereses||'',
+    capitalizacion:p.capitalizacion||'',totalDeuda:p.totalDeuda||'',
+    valorInicial:p.valorInicial||'',numCuotas:p.numCuotas||'',
+    valorCuota:p.valorCuota||'',tasaInteres:p.tasaInteres||'',
+    fechaInicio:cleanDate(p.fechaInicio||''),fechaVencimiento:cleanDate(p.fechaVencimiento||''),
+    inicioMora:cleanDate(p.inicioMora||''),ultimoPago:cleanDate(p.ultimoPago||''),
+    aportes:p.aportes||'',totalAportes:p.totalAportes||'',ahorros:p.ahorros||'',
+    gastos:JSON.stringify(p.gastos||[]),
+    honCausados:JSON.stringify(p.honCausados||[]),
+    costas:String(p.costas||''),
+    pagoHonorariosRealizado:String(p.pagoHonorariosRealizado===true),
+    fechaDevolucionPagares:cleanDate(p.fechaDevolucionPagares||''),
+    notifDemandado:String(p.notifDemandado===true),
+    fechaIngreso:cleanDate(p.fechaIngreso||''),
+    pagaresUnificados:JSON.stringify(p.pagaresUnificados||[]),
+    hojaFisica:String(p.hojaFisica===true),
+    atencionPrioritaria:String(p.atencionPrioritaria===true),
+    vigiladoLitigio:String(p.vigiladoLitigio===true),
+    vigiladoPropio:String(p.vigiladoPropio===true),
+    notifCodeudores:JSON.stringify(p.notifCodeudores||[])
+  };
+}
+function syncPagarePromise(p){
+  var url=LS.get('cya3_api_url')||API;
+  var payload=buildPayload(p);
+  return new Promise(function(resolve){
+    apiCall(payload, function(err,d){
+      if(err||!d||!d.ok){
+        if(!window._lastSyncError)window._lastSyncError=err?err.message:d;
+        resolve(false);
+      } else { resolve(true); }
+    });
+  });
+}
+
+// ── USUARIO ──────────────────────────────────────────────
+function guardarUsuario(){
+  var n=document.getElementById('u-nombre').value;
+  if(!n){alert('Selecciona tu nombre');return;}
+  usuario={nombre:n,rol:document.getElementById('u-rol').value,estudio:'Merino Correa Abogados'};
+  LS.set('cya3_usuario',usuario);
+  closeModal('modal-usuario');
+  applyUser();
+}
+function diagnosticarHojaSheets(){
+  var url=LS.get('cya3_api_url')||'';
+  if(!url){toast('Configura la URL primero');return;}
+  setSS('','Probando getAll...');
+  jsonpCall(url+'?action=getAll', function(err,d){
+    setSS('','Diagnóstico listo');
+    if(err){alert('Error: '+err.message);return;}
+    var info='getAll response:\n';
+    info+='keys: '+Object.keys(d).join(', ')+'\n';
+    if(d.pagares){
+      info+='pagares.length: '+d.pagares.length+'\n';
+      if(d.pagares.length>0){
+        var p=d.pagares[0];
+        info+='primer pagare keys: '+Object.keys(p).join(', ')+'\n';
+        info+='juzgado: '+p.juzgado+'\n';
+        info+='fechaIngreso: '+p.fechaIngreso+'\n';
+      }
+    } else {
+      info+='SIN campo pagares!\n';
+      info+='respuesta: '+JSON.stringify(d).slice(0,300);
+    }
+    alert(info);
+  });
+}
+function detectarTodosJuzgados(){
+  var detectados=0;
+  var sinJuzgado=0;
+  pagares.forEach(function(p){
+    var rad=String(p.radicadoRama||'').replace(/[^0-9]/g,'');
+    if(rad.length>=12){
+      var codigo=rad.slice(0,12);
+      if(JUZGADOS[codigo]){
+        p.juzgado=JUZGADOS[codigo];
+        detectados++;
+      } else {
+        sinJuzgado++;
+      }
+    }
+  });
+  if(detectados===0){
+    toast('Ningún radicado coincide con los juzgados registrados');
+    return;
+  }
+  savePagaresLocal();
+  toast('✓ '+detectados+' juzgados detectados. '+sinJuzgado+' radicados sin coincidencia. Subiendo a Sheets...');
+  setSS('','Detectados '+detectados+' juzgados, subiendo...');
+  // Upload all pagares that now have juzgado
+  var conJuzgado=pagares.filter(function(p){return p.juzgado&&p.juzgado.length>0;});
+  var done=0;
+  function uploadNext(idx){
+    if(idx>=conJuzgado.length){
+      setSS('','✓ '+done+' pagarés con juzgado subidos');
+      toast('✓ Completado: '+done+' pagarés con juzgado guardados en Sheets');
+      renderTabla();
+      return;
+    }
+    var payload=buildPayload(conJuzgado[idx]);
+    var params=new URLSearchParams({data:JSON.stringify(payload)});
+    apiCall(buildPayload(conJuzgado[idx]), function(err,d){
+    done++;setTimeout(function(){uploadNext(idx+1);},150);
+  });
+  }
+  uploadNext(0);
+}
+function testJuzgadoCompleto(){
+  var url=LS.get('cya3_api_url')||'';
+  if(!url){toast('Configura URL primero');return;}
+  var p=JSON.parse(JSON.stringify(pagares[0])); // deep copy
+  p.juzgado='JUZGADO PRUEBA 999';
+  var payload=buildPayload(p);
+  var params=new URLSearchParams({data:JSON.stringify(payload)});
+  setSS('','Enviando juzgado de prueba...');
+  apiCall(payload, function(err1,d){
+    if(err1||!d||!d.ok){alert('Error al guardar: '+(err1?err1.message:JSON.stringify(d)));return;}
+    setSS('','Leyendo de vuelta...');
+    jsonpCall(url+'?action=getAll', function(err2,data){
+    if(!data) return;
+    var arr=Array.isArray(data)?data:(data.pagares||[]);
+    var found=arr.find(function(x){return String(x.pagare)===String(p.pagare);});
+    if(!found){alert('No se encontró el pagaré en la respuesta del servidor');return;}
+    var info='RESULTADO LECTURA DEL SERVIDOR:\n\n';
+    info+='pagare: '+found.pagare+'\n';
+    info+='juzgado: "'+(found.juzgado||'VACÍO')+'"\n';
+    info+='abogadoResponsable: "'+(found.abogadoResponsable||'VACÍO')+'"\n';
+    info+='\nSi juzgado dice VACÍO, el Apps Script no está actualizado.\n';
+    info+='Si dice "JUZGADO PRUEBA 999", el pipeline funciona correctamente.';
+    setSS('','Diagnóstico completo');
+    alert(info);
+  })
+  });
+}
+function testJuzgado(){
+  var url=LS.get('cya3_api_url')||'';
+  if(!url){toast('Configura URL primero');return;}
+  // Find first pagare that has juzgado set
+  var p=pagares.find(function(x){return x.juzgado&&x.juzgado.length>0;});
+  if(!p){
+    p=pagares[0];
+    p.juzgado='JUZGADO TEST 001';
+    toast('Ninguno tiene juzgado, usando TEST en el primero');
+  }
+  var payload=buildPayload(p);
+  var info='ENVIANDO pagare: '+p.pagare+'\n';
+  info+='juzgado en objeto p: "'+( p.juzgado||'VACÍO')+'"\n';
+  info+='juzgado en payload: "'+( payload.juzgado||'VACÍO')+'"\n';
+  info+='data JSON (300 chars): '+JSON.stringify(payload).slice(0,300)+'\n\n';
+  var params=new URLSearchParams({data:JSON.stringify(payload)});
+  info+='URL length: '+params.toString().length+' chars\n';
+  apiCall(payload, function(err,d){
+    info+='\nRESPUESTA DEL SERVIDOR:\n'+(err?('ERROR: '+err.message):JSON.stringify(d).slice(0,400));
+    alert(info);
+  });
+}
+function diagnosticarSubida(){
+  var url=LS.get('cya3_api_url')||'';
+  if(!url){toast('Configura la URL primero');return;}
+  setSS('','Probando 1 pagaré...');
+  var p=pagares[0];
+  if(!p){toast('No hay pagarés');return;}
+  var payload=buildPayload(p);
+  apiCall(payload, function(err,d){
+    var msg=err?('Error red: '+err.message):JSON.stringify(d).slice(0,500);
+    alert('Respuesta del servidor para pagaré '+p.pagare+':\n\n'+msg);
+    setSS('','Diagnóstico completo');
+  });
+}
+// ══════════════════════════════════════════════════════
+// UI FUNCTIONS - Complete render layer
+// ══════════════════════════════════════════════════════
+
+function applyUser(){
+  if(!usuario){openModal('modal-usuario');return;}
+  document.getElementById('u-nombre-display').textContent=usuario.nombre||'—';
+  document.getElementById('u-rol-display').textContent=usuario.rol||'';
+}
+function toggleConfig(){
+  var panel=document.getElementById('cfg-panel');
+  var arrow=document.getElementById('cfg-arrow');
+  if(!panel)return;
+  var open=panel.style.display==='none'||panel.style.display==='';
+  panel.style.display=open?'block':'none';
+  if(arrow)arrow.textContent=open?'▼':'▶';
+}
+function abrirConfig(){openModal('modal-config');var el=document.getElementById('cfg-url');if(el)el.value=API||'';}
+function guardarConfig(){
+  var el=document.getElementById('cfg-url');
+  if(!el)return;
+  var url=el.value.trim();
+  if(!url){toast('Pega la URL del Apps Script');return;}
+  if(!url.includes('script.google.com')){toast('URL inválida — debe ser de script.google.com');return;}
+  API=url;LS.set('cya3_api_url',url);
+  closeModal('modal-config');toast('✓ URL guardada');
+  setTimeout(function(){testConexion();},800);
+}
+function testConexion(){
+  var url=LS.get('cya3_api_url')||'';
+  if(!url){toast('⚠ Configura la URL del Apps Script');openModal('modal-config');return;}
+  API=url;setSS('','Probando...');
+  // Remove any cached JSONP scripts first
+  document.querySelectorAll('script[id^="jsonp-"]').forEach(function(el){el.remove();});
+  jsonpCall(url+'?action=testConnection',function(err,d){
+    if(err){
+      setSS('e','Sin conexión');
+      toast('Error: '+err.message+'. Prueba: Ctrl+Shift+R para recargar sin caché');
+      return;
+    }
+    if(d&&d.ok){setSS('','✓ Conectado');toast('✓ Conectado: '+d.sheets);}
+    else{setSS('e','Error');toast('Error: '+(d&&d.error||'sin respuesta'));}
+  });
+}
+function limpiarCacheConexion(){
+  // Remove all cached JSONP scripts
+  document.querySelectorAll('script[id^="jsonp-"]').forEach(function(el){el.remove();});
+  // Clear object references
+  Object.keys(window).filter(function(k){return k.startsWith('_jcb');}).forEach(function(k){delete window[k];});
+  // Force new URL with timestamp to bypass any cache
+  var url=LS.get('cya3_api_url')||'';
+  if(!url){toast('Configura la URL primero');return;}
+  API=url+'?nocache='+Date.now();
+  LS.set('cya3_api_url', url); // keep original URL stored
+  API=url; // reset to original
+  toast('Caché limpiado. Probando conexión...');
+  setTimeout(testConexion, 300);
+}
+function repararEncabezadosSheet(){
+  var url=LS.get('cya3_api_url')||API;if(!url){toast('Configura URL');return;}
+  setSS('','Reparando...');
+  jsonpCall(url+'?action=repararEncabezados',function(err,d){
+    if(err){setSS('e','Error');toast('Error: '+err.message);return;}
+    if(d&&d.ok){setSS('','✓ OK');toast('✓ '+d.msg);}
+    else{setSS('e','Error');toast('Error: '+(d&&d.msg||JSON.stringify(d)));}
+  });
+}
+function repararAlineacionSheet(){
+  var url=LS.get('cya3_api_url')||API;if(!url){toast('Configura URL');return;}
+  if(!confirm('Reescribirá TODAS las filas para alinear columnas. ¿Continuar?'))return;
+  setSS('','Reparando alineación...');
+  jsonpCall(url+'?action=repararAlineacion',function(err,d){
+    if(err){setSS('e','Error');toast('Error: '+err.message);return;}
+    if(d&&d.ok){setSS('','✓ OK');toast('✓ '+d.msg);}
+    else{setSS('e','Error');toast('Error: '+(d&&d.msg||JSON.stringify(d)));}
+  });
+}
+function navTo(v,el){
+  currentView=v;currentPagId=null;expandedRows.clear();
+  document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});
+  if(el)el.classList.add('active');
+  var ts={dashboard:'Dashboard',pagares:'Pagarés / Deudores',actuaciones:'Todas las actuaciones',informe:'Informe general'};
+  document.getElementById('page-title').textContent=ts[v]||v;
+  renderView();
+}
+function renderView(){
+  if(currentView==='dashboard')renderDash();
+  else if(currentView==='pagares'){if(currentPagId)renderDetalle(currentPagId);else renderPagares();}
+  else if(currentView==='actuaciones')renderActuaciones();
+  else if(currentView==='informe')renderInforme();
+}
+function abrirPagare(id){
+  currentView='pagares';currentPagId=id;
+  document.querySelectorAll('.ni').forEach(function(n,i){n.classList.toggle('active',i===1);});
+  document.getElementById('page-title').textContent='Pagarés / Deudores';
+  renderView();
+}
+function renderDash(){
+  document.getElementById('topbar-actions').innerHTML='';
+  var total=pagares.length;
+  var totalDeuda=pagares.reduce(function(s,p){return s+parseCOP(p.totalDeuda);},0);
+  var juridicos=pagares.filter(function(p){return p.estadoProceso==='juridico';}).length;
+  var totalActs=pagares.reduce(function(s,p){return s+(p.actuaciones||[]).length;},0);
+  var allActs=[];
+  pagares.forEach(function(p){
+    (p.actuaciones||[]).forEach(function(a){
+      allActs.push({fecha:cleanDate(a.fecha||''),tipo:a.tipo,desc:a.desc,autor:a.autor,pagare:p.pagare,titular:p.titular&&p.titular.nombre?p.titular.nombre:'—'});
+    });
+  });
+  allActs.sort(function(a,b){return toYMD(b.fecha||'').localeCompare(toYMD(a.fecha||''));});
+  var h='<div class="stats-grid">'
+    +'<div class="sc gold"><div class="sl">Pagarés en mora</div><div class="sv">'+total+'</div><div class="ss">Cooperativa de Yarumal</div></div>'
+    +'<div class="sc red"><div class="sl">Total deuda</div><div class="sv" style="font-size:18px">$'+(totalDeuda/1e6).toFixed(1)+'M</div><div class="ss">capital + intereses + cap.</div></div>'
+    +'<div class="sc blue"><div class="sl">En etapa jurídica</div><div class="sv">'+juridicos+'</div><div class="ss">'+(total-juridicos)+' en prejurídico</div></div>'
+    +'<div class="sc green"><div class="sl">Actuaciones</div><div class="sv">'+totalActs+'</div><div class="ss">registradas en total</div></div>'
+    +'</div>'
+    +'<div class="card"><div class="ch"><h3>Actuaciones recientes</h3>'
+    +'<button class="btn sm" onclick="navTo(\'actuaciones\',document.querySelectorAll(\'.ni\')[2])">Ver todas →</button></div>';
+  if(allActs.length){
+    allActs.slice(0,8).forEach(function(a){
+      h+='<div class="actsrow" data-pg="'+a.pagare+'" onclick="abrirPagare(this.dataset.pg)">'
+        +'<div class="adc"><div class="ad">'+fday(a.fecha)+'</div><div class="am">'+fmon(a.fecha)+' '+fyr(a.fecha)+'</div></div>'
+        +'<div class="aline"></div>'
+        +'<div class="abody">'
+        +'<div style="font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:2px">Pagaré '+a.pagare+' — '+a.titular+'</div>'
+        +'<div class="adesc">'+(a.desc||'')+'</div>'
+        +'<div class="ameta"><span class="at '+(a.tipo||'otro')+'">'+(TIPO_ICON[a.tipo]||'📌')+' '+(TIPO_LABEL[a.tipo]||a.tipo)+'</span>'
+        +(a.autor?'<span class="aauth">'+a.autor+'</span>':'')
+        +'</div></div></div>';
+    });
+  } else {
+    h+='<div class="empty-acts">Sin actuaciones registradas aún.</div>';
+  }
+  h+='</div>';
+  document.getElementById('content').innerHTML=h;
+}
+
+
+function renderPagares(){
+  document.getElementById('topbar-actions').innerHTML=
+    '<button class="btn primary" onclick="abrirModalNuevoPagare()">+ Nuevo pagaré</button>'+
+    '<button class="btn sm" onclick="subirTodoASheets()" style="background:var(--green-l);color:var(--green);margin-left:4px">⬆ Subir a Sheets</button>'+
+    '<button class="btn sm" onclick="cargarDatos()" style="margin-left:4px">↻ Sync</button>'+
+    '<button class="btn sm" onclick="limpiarYEliminarInvalidos()" style="margin-left:4px;background:var(--red-l);color:var(--red)" title="Eliminar pagarés con número inválido">🗑 Limpiar inválidos</button>';
+  var abogadoOpts='<option value="todos">Todos los abogados</option>'+
+    ['Juan Pablo Restrepo','Luis Fernando Merino','Sonia Restrepo','Verónica Salazar']
+    .map(function(a){return '<option value="'+a+'" '+(filtroAbogado===a?'selected':'')+'>'+a+'</option>';}).join('');
+  document.getElementById('content').innerHTML=
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">'+
+      '<input id="srch" placeholder="🔍 Nombre, CC, pagaré, radicado, abogado..." value="'+busqueda+'"'+
+        ' style="flex:1;min-width:180px;font-size:13px;padding:7px 10px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--white)">'+
+      '<select id="filt-est" style="font-size:12px;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--white)">'+
+        '<option value="todos" '+(filtroEstado==='todos'?'selected':'')+'>Todos los estados</option>'+
+        '<option value="activos" '+(filtroEstado==='activos'?'selected':'')+'>Activos (Prej+Jur+Acuerdo)</option>'+
+        '<option value="prejuridico" '+(filtroEstado==='prejuridico'?'selected':'')+'>Prejurídico</option>'+
+        '<option value="juridico" '+(filtroEstado==='juridico'?'selected':'')+'>Jurídico</option>'+
+        '<option value="acuerdo" '+(filtroEstado==='acuerdo'?'selected':'')+'>Acuerdo</option>'+
+        '<option value="terminado" '+(filtroEstado==='terminado'?'selected':'')+'>Terminado</option>'+
+      '</select>'+
+      '<select id="filt-abg" style="font-size:12px;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--white)">'+abogadoOpts+'</select>'+
+      '<select id="filt-prio" style="font-size:12px;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--white)">'+
+        '<option value="todos">Todos</option>'+
+        '<option value="prioritario" '+(filtroPrioritario==='prioritario'?'selected':'')+'>⚡ Solo prioritarios</option>'+
+      '</select>'+
+      '<select id="ord" style="font-size:12px;padding:6px 10px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--white)">'+
+        '<option value="pagare" '+(ordenTabla==='pagare'?'selected':'')+'>N.° pagaré</option>'+
+        '<option value="ultimaAct" '+(ordenTabla==='ultimaAct'?'selected':'')+'>Última actuación</option>'+
+        '<option value="sinGestion" '+(ordenTabla==='sinGestion'?'selected':'')+'>Sin gestión primero</option>'+
+        '<option value="deuda" '+(ordenTabla==='deuda'?'selected':'')+'>Mayor deuda</option>'+
+      '</select>'+
+      '<button class="btn sm" onclick="busqueda=\'\';filtroEstado=\'todos\';filtroAbogado=\'todos\';filtroPrioritario=\'todos\';ordenTabla=\'pagare\';renderPagares()">✕ Limpiar</button>'+
+    '</div>'+
+    '<div id="result-counter" style="font-size:12px;color:var(--ink3);margin-bottom:8px"></div>'+
+    '<div class="card" style="padding:0"><div style="overflow-x:auto">'+
+    '<table class="tbl" id="main-tbl"><thead><tr>'+
+    '<th>Pagaré</th><th>Deudor</th><th>Total deuda</th><th>Actuaciones</th><th>Estado / Etapa</th><th>Última actuación</th>'+
+    '</tr></thead><tbody id="tbl-body"></tbody></table></div></div>';
+  setTimeout(function(){
+    var srch=document.getElementById('srch');
+    var filtEst=document.getElementById('filt-est');
+    var filtAbg=document.getElementById('filt-abg');
+    var filtPrio=document.getElementById('filt-prio');
+    var ord=document.getElementById('ord');
+    if(srch)srch.addEventListener('input',function(){busqueda=this.value;renderTabla();});
+    if(filtEst)filtEst.addEventListener('change',function(){filtroEstado=this.value;renderTabla();});
+    if(filtAbg)filtAbg.addEventListener('change',function(){filtroAbogado=this.value;renderTabla();});
+    if(filtPrio)filtPrio.addEventListener('change',function(){filtroPrioritario=this.value;renderTabla();});
+    if(ord)ord.addEventListener('change',function(){ordenTabla=this.value;renderTabla();});
+  },0);
+  renderTabla();
+}
+
+
+function renderTabla(){
+  var q=busqueda.toLowerCase().trim();
+  var BLOCKLIST=['10000'];
+  var fil=pagares.filter(function(p){
+    var pgStr=String(p.pagare||'').trim();
+    if(!pgStr||!/^\d+$/.test(pgStr)||BLOCKLIST.indexOf(pgStr)>=0) return false;
+    if(filtroEstado==='activos'){if(p.estadoProceso==='terminado')return false;}
+    else if(filtroEstado!=='todos'){if(p.estadoProceso!==filtroEstado)return false;}
+    if(filtroAbogado!=='todos'&&(p.abogadoResponsable||'')!==filtroAbogado)return false;
+    if(filtroPrioritario==='prioritario'&&p.atencionPrioritaria!==true)return false;
+    if(!q)return true;
+    var codNombres=(p.codeudores||[]).map(function(cd){return(cd.nombre||'').toLowerCase();}).join(' ');
+    var hay=pgStr+' '+(p.titular?p.titular.nombre||'':'').toLowerCase()+' '+
+            (p.titular?p.titular.cc||'':'')+' '+(p.abogadoResponsable||'').toLowerCase()+' '+
+            (p.radicadoRama||'')+' '+codNombres+' '+
+            (p.titular?p.titular.ciudad||'':'').toLowerCase()+' '+(p.titular?p.titular.telefono||'':'');
+    return hay.includes(q);
+  });
+  fil.sort(function(a,b){
+    if(ordenTabla==='deuda')return parseCOP(b.totalDeuda)-parseCOP(a.totalDeuda);
+    if(ordenTabla==='ultimaAct'){
+      var getUlt=function(p){
+        if(!p.actuaciones||!p.actuaciones.length)return'';
+        return p.actuaciones.slice().sort(function(x,y){return toYMD(y.fecha||'').localeCompare(toYMD(x.fecha||''));})[0].fecha||'';
+      };
+      var ua=getUlt(a),ub=getUlt(b);
+      if(!ua&&!ub)return 0;if(!ua)return 1;if(!ub)return -1;
+      return toYMD(ub).localeCompare(toYMD(ua));
+    }
+    if(ordenTabla==='sinGestion'){
+      var hasA=a.actuaciones&&a.actuaciones.length>0;
+      var hasB=b.actuaciones&&b.actuaciones.length>0;
+      if(!hasA&&!hasB)return toYMD(a.inicioMora||'').localeCompare(toYMD(b.inicioMora||''));
+      if(!hasA)return -1;if(!hasB)return 1;
+      var getOld=function(p){return p.actuaciones.slice().sort(function(x,y){return toYMD(x.fecha||'').localeCompare(toYMD(y.fecha||''));})[0].fecha||'';};
+      return toYMD(getOld(a)).localeCompare(toYMD(getOld(b)));
+    }
+    return String(a.pagare).localeCompare(String(b.pagare),undefined,{numeric:true});
+  });
+  var ctr=document.getElementById('result-counter');
+  if(ctr){
+    var totalDeudaFil=fil.reduce(function(s,p){return s+parseCOP(p.totalDeuda);},0);
+    ctr.innerHTML='<strong>'+fil.length+'</strong> pagaré'+(fil.length!==1?'s':'')+' encontrado'+(fil.length!==1?'s':'')+
+      ' · Deuda total filtrada: <strong style="color:var(--red)">'+fmtCOP(totalDeudaFil)+'</strong>';
+  }
+  var body=document.getElementById('tbl-body');
+  if(!body)return;
+  if(!fil.length){body.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--ink3)">Sin resultados</td></tr>';return;}
+  var html='';
+  fil.forEach(function(p){
+    var ults='—';
+    if(p.actuaciones&&p.actuaciones.length){
+      var sorted=p.actuaciones.slice().sort(function(x,y){return toYMD(y.fecha||'').localeCompare(toYMD(x.fecha||''));});
+      var la=sorted[0];
+      var laFecha=cleanDate(la.fecha||'');
+      ults='<div style="font-size:11px;font-weight:500">'+laFecha+'</div>'
+          +'<div style="font-size:11px;color:var(--ink3)">'+(TIPO_LABEL[la.tipo]||la.tipo)+'</div>'
+          +'<div style="font-size:10px;color:var(--blue);cursor:pointer" data-pg="'+p.pagare+'" onclick="event.stopPropagation();verHistorial(this.dataset.pg)">Ver actuaciones →</div>';
+    }
+    var respStr=p.abogadoResponsable?'<div style="font-size:10px;color:var(--blue)">'+p.abogadoResponsable+'</div>':'';
+    var numActs=(p.actuaciones||[]).length;
+    var actsStr=numActs>0?'<span style="background:var(--blue-l);color:var(--blue);font-weight:600;padding:2px 8px;border-radius:12px;font-size:12px">'+numActs+'</span>':'<span style="color:var(--ink3);font-size:11px">Sin gestiones</span>';
+    html+='<tr class="dr" data-pg="'+p.pagare+'" onclick="toggleExp(this.dataset.pg)" id="row-'+p.pagare+'">'
+      +'<td><div class="tdi"><span class="tgl" id="tgl-'+p.pagare+'">▶</span><strong>'+p.pagare+'</strong>'
+      +'<button data-pg="'+p.pagare+'" onclick="event.stopPropagation();eliminarPagareCompleto(this.dataset.pg)" style="margin-left:6px;background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;opacity:.6" title="Eliminar pagaré">🗑</button>'
+      +'</div></td>'
+      +'<td><div style="font-weight:500">'+(p.titular?p.titular.nombre||'—':'—')+'</div>'
+        +'<div style="font-size:11px;color:var(--ink3)">'+(p.titular?p.titular.cc||'':'')+((p.titular&&p.titular.ciudad)?(' · '+p.titular.ciudad):'')+'</div>'
+        +(p.codeudores&&p.codeudores.length?'<div style="font-size:10px;color:var(--blue)">+'+p.codeudores.length+' codeudor(es)</div>':'')
+        +(p.pagaresUnificados&&p.pagaresUnificados.length?'<div style="font-size:10px;color:var(--amber);font-weight:500">🔗 Unif. con: '+p.pagaresUnificados.join(', ')+'</div>':'')
+      +'</td>'
+      +'<td style="font-size:15px;font-weight:700;color:var(--red)">'+(p.totalDeuda||'—')
+        +'<div style="font-size:10px;color:var(--ink3);font-weight:400">Mora: '+cleanDate(p.inicioMora||'')+'</div></td>'
+      +'<td style="text-align:center">'+actsStr+'</td>'
+      +'<td>'+estadoBadge(p.estadoProceso)
+        +(p.etapaJuridica?'<div style="font-size:10px;color:var(--ink3);margin-top:2px">'+p.etapaJuridica+'</div>':'')
+        +(p.atencionPrioritaria===true?'<div style="font-size:10px;color:var(--red);font-weight:600">⚡ Prioritario</div>':'')
+        +respStr+'</td>'
+      +'<td style="font-size:12px">'+ults+'</td>'
+      +'</tr>'
+      +'<tr class="exp-row" id="exp-row-'+p.pagare+'">'
+      +'<td colspan="6"><div class="exp-inner" id="exc-'+p.pagare+'"></div></td>'
+      +'</tr>';
+  });
+  body.innerHTML=html;
+  expandedRows.forEach(function(id){
+    var excEl=document.getElementById('exc-'+id);
+    var tglEl=document.getElementById('tgl-'+id);
+    if(excEl&&!excEl.innerHTML.trim()){
+      var pp=pagares.find(function(x){return String(x.pagare)===String(id);});
+      if(pp)excEl.innerHTML=buildExp(pp);
+      excEl.classList.add('open');
+    }
+    if(tglEl)tglEl.classList.add('open');
+  });
+}
+function toggleExp(id){
+  var sid=String(id);
+  if(expandedRows.has(sid))expandedRows.delete(sid);else expandedRows.add(sid);
+  var exc=document.getElementById('exc-'+sid);
+  var tgl=document.getElementById('tgl-'+sid);
+  var open=expandedRows.has(sid);
+  if(exc){
+    exc.classList.toggle('open',open);
+    if(open&&!exc.innerHTML.trim()){
+      var p=pagares.find(function(x){return String(x.pagare)===sid;});
+      if(p)exc.innerHTML=buildExp(p);
+    }
+  }
+  if(tgl)tgl.classList.toggle('open',open);
+}
+function rebuildExp(pid){
+  var excEl=document.getElementById('exc-'+pid);
+  var pp=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(excEl&&pp)excEl.innerHTML=buildExp(pp);
+}
+
+
+function buildExp(p){
+  var pg=p.pagare;
+  var etapasOpts=ETAPAS.map(function(e){return '<option value="'+e+'"'+(p.etapaJuridica===e?' selected':'')+'>'+e+'</option>';}).join('');
+  var est=p.estadoProceso||'prejuridico';
+  var h='<div class="exp-inner" style="display:flex">';
+
+  // ── Panel 1: Contacto ──────────────────────────────────────────
+  h+='<div class="es"><h5>Contacto titular</h5>';
+  h+='<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bdr2)">'+(p.titular?p.titular.nombre||'—':'—')+'</div>';
+  h+=ir('C.C.',p.titular?p.titular.cc:'');
+  h+=ir('Teléfono principal',p.titular?p.titular.telefono:'');
+  h+='<div class="ir"><div class="ik">Teléfono 2</div><input class="tel2-inp" data-pg="'+pg+'" value="'+(p.titular?p.titular.telefono2||'':'')
+    +'" placeholder="Teléfono 2" onclick="event.stopPropagation()" style="font-size:12px;padding:3px 6px;border:1px solid var(--bdr);border-radius:4px;width:100%"></div>';
+  h+='<div class="ir"><div class="ik">Email</div><input class="email-inp" data-pg="'+pg+'" value="'+(p.titular?p.titular.email||'':'')
+    +'" placeholder="correo@email.com" onclick="event.stopPropagation()" style="font-size:12px;padding:3px 6px;border:1px solid var(--bdr);border-radius:4px;width:100%"></div>';
+  h+=ir('Dirección',p.titular?p.titular.direccion:'');
+  h+=ir('Ciudad',p.titular?p.titular.ciudad:'');
+  var cods=p.codeudores||[];
+  if(cods.length){
+    h+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--bdr2)"><div style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Codeudores ('+cods.length+')</div>';
+    cods.forEach(function(cod,ci){
+      h+='<div style="background:var(--cream);border-radius:6px;padding:6px 8px;margin-bottom:6px">';
+      h+='<div style="font-weight:500;font-size:12px">'+(cod.nombre||'—')+'</div>';
+      h+='<div style="font-size:11px;color:var(--ink3)">CC: '+(cod.cc||'—')+' · '+(cod.ciudad||'—')+'</div>';
+      if(cod.direccion)h+='<div style="font-size:11px;color:var(--ink3);margin-bottom:2px">📍 '+cod.direccion+'</div>';
+      h+='<div style="font-size:11px;margin-bottom:3px">'+(cod.telefono||'—')+'</div>';
+      h+='<div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Tel 2</div>';
+      h+='<input class="cod-tel2-inp" data-pg="'+pg+'" data-ci="'+ci+'" value="'+(cod.telefono2||'')+'" placeholder="Teléfono 2" onclick="event.stopPropagation()" style="font-size:11px;padding:2px 5px;border:1px solid var(--bdr);border-radius:4px;width:100%;margin-bottom:3px">';
+      h+='<div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Email</div>';
+      h+='<input class="cod-email-inp" data-pg="'+pg+'" data-ci="'+ci+'" value="'+(cod.email||'')+'" placeholder="correo@email.com" onclick="event.stopPropagation()" style="font-size:11px;padding:2px 5px;border:1px solid var(--bdr);border-radius:4px;width:100%;margin-bottom:3px">';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
+  h+='</div>';
+
+  // ── Panel 2: Crédito y saldos ──────────────────────────────────
+  h+='<div class="es"><h5>Crédito y saldos</h5>';
+  h+=ir('Valor inicial',p.valorInicial);h+=ir('N.° cuotas',p.numCuotas);
+  h+=ir('Valor cuota',p.valorCuota);h+=ir('Tasa interés',p.tasaInteres);
+  h+=ir('Fecha inicio',p.fechaInicio);h+=ir('Vencimiento',p.fechaVencimiento);
+  h+=ir('Inicio mora',p.inicioMora);h+=ir('Último pago',p.ultimoPago);
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">';
+  h+='<div class="ci"><div class="ci-l">Capital</div><div class="ci-v">'+(p.saldoCapital||'—')+'</div></div>';
+  h+='<div class="ci"><div class="ci-l">Intereses</div><div class="ci-v">'+(p.intereses||'—')+'</div></div>';
+  h+='<div class="ci"><div class="ci-l">Capitalización</div><div class="ci-v">'+(p.capitalizacion||'—')+'</div></div>';
+  h+='<div class="ci hl"><div class="ci-l">Total deuda</div><div class="ci-v">'+(p.totalDeuda||'—')+'</div></div>';
+  h+='</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px">';
+  h+='<div class="ci"><div class="ci-l">Aportes</div><div class="ci-v">'+(p.aportes||'—')+'</div></div>';
+  h+='<div class="ci"><div class="ci-l">Total aportes</div><div class="ci-v">'+(p.totalAportes||'—')+'</div></div>';
+  h+='<div class="ci"><div class="ci-l">Ahorros</div><div class="ci-v">'+(p.ahorros||'—')+'</div></div>';
+  h+='</div>';
+  // Honorarios
+  var _hr=calcHonorarios(p,p.honorariosPct);
+  var _hasPct=_hr.pctNum>0;
+  h+='<div style="margin-top:10px;background:var(--cream);border-radius:var(--r);padding:10px">';
+  h+='<div style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Honorarios</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end">';
+  h+='<div><div class="ci-l">% Honorarios</div><input class="hon-pct-inp" data-pg="'+pg+'" value="'+(p.honorariosPct||'')+'" placeholder="Ej. 10" onclick="event.stopPropagation()" style="margin-top:3px;font-size:12px;padding:5px 8px;width:100%;border:1px solid var(--bdr);border-radius:var(--r);background:#fff"></div>';
+  h+='<div class="ci"><div class="ci-l">Valor honorarios</div><div class="ci-v" id="hon-val-'+pg+'" style="color:var(--gold)">'+(_hasPct?fmtCOP(_hr.hon):'—')+'</div></div>';
+  h+='<div class="ci hl"><div class="ci-l">Total + hon.</div><div class="ci-v" style="font-weight:700" id="hon-tot-'+pg+'">'+(_hasPct?fmtCOP(_hr.total):p.totalDeuda)+'</div></div>';
+  h+='</div></div>';
+  // Honorarios causados + costas
+  var _honCausados=p.honCausados||[];
+  var _totalHonCaus=_honCausados.reduce(function(s,hc){return s+(parseFloat(String(hc.valor||'').replace(/[^0-9]/g,''))||0);},0);
+  var _costas=parseCOP(p.costas||0);
+  h+='<div style="margin-top:8px;background:var(--cream);border-radius:var(--r);padding:10px">';
+  h+='<div style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Honorarios causados y costas</div>';
+  if(_honCausados.length){
+    h+='<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:6px">';
+    h+='<tr style="color:var(--ink3)"><th style="text-align:left;padding:2px 4px">Fecha</th><th style="text-align:right;padding:2px 4px">Valor</th><th></th></tr>';
+    _honCausados.forEach(function(hc,i){
+      h+='<tr style="border-top:1px solid var(--bdr2)">';
+      h+='<td style="padding:3px 4px">'+(hc.fecha||'—')+'</td>';
+      h+='<td style="padding:3px 4px;text-align:right;color:var(--gold);font-weight:500">'+fmtCOP(parseFloat(String(hc.valor||'').replace(/[^0-9]/g,''))||0)+'</td>';
+      h+='<td><button data-pg="'+pg+'" data-idx="'+i+'" onclick="event.stopPropagation();eliminarHonCausado(this.dataset.pg,parseInt(this.dataset.idx))" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px">&#215;</button></td>';
+      h+='</tr>';
+    });
+    h+='<tr style="border-top:2px solid var(--bdr)"><td style="padding:3px 4px;font-weight:600">Total</td><td style="padding:3px 4px;text-align:right;font-weight:600;color:var(--gold)">'+fmtCOP(_totalHonCaus)+'</td><td></td></tr>';
+    h+='</table>';
+  } else {
+    h+='<div style="font-size:11px;color:var(--ink3);margin-bottom:6px">Sin honorarios causados</div>';
+  }
+  h+='<div style="display:flex;gap:6px;align-items:flex-end;margin-bottom:8px">';
+  h+='<div><div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Fecha pago</div><input type="date" id="honcaus-fecha-'+pg+'" onclick="event.stopPropagation()" style="font-size:11px;padding:4px 6px;border:1px solid var(--bdr);border-radius:var(--r);background:#fff"></div>';
+  h+='<div style="flex:1"><div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Valor $</div><input type="number" id="honcaus-valor-'+pg+'" placeholder="0" onclick="event.stopPropagation()" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid var(--bdr);border-radius:var(--r);background:#fff"></div>';
+  h+='<button data-pg="'+pg+'" onclick="event.stopPropagation();agregarHonCausado(this.dataset.pg)" class="btn primary" style="padding:5px 10px;font-size:11px">+ Agregar</button>';
+  h+='</div>';
+  h+='<div style="display:flex;align-items:center;gap:8px;padding-top:6px;border-top:1px solid var(--bdr2)">';
+  h+='<div style="font-size:11px;font-weight:500;white-space:nowrap">Costas judiciales $:</div>';
+  h+='<input type="number" class="costas-inp" data-pg="'+pg+'" value="'+(p.costas||'')+'" placeholder="0" onclick="event.stopPropagation()" style="flex:1;font-size:12px;padding:4px 8px;border:1px solid var(--bdr);border-radius:var(--r);background:#fff">';
+  h+='<div style="font-size:12px;font-weight:600;color:var(--ink2)">'+(_costas>0?fmtCOP(_costas):'—')+'</div>';
+  h+='</div></div>';
+  // Recuperación de cartera
+  var _abonos=p.abonos||[];
+  var _pagTotal=p.pagadoTotal===true;
+  var _totalAb=_abonos.reduce(function(s,a){return s+(parseFloat(String(a.monto||'').replace(/[^0-9]/g,''))||0);},0);
+  h+='<div style="margin-top:10px;background:var(--cream);border-radius:var(--r);padding:10px">';
+  h+='<div style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Recuperación de cartera</div>';
+  h+='<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">';
+  h+='<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" class="pag-total-chk" data-pg="'+pg+'"'+(_pagTotal?' checked':'')+' onclick="event.stopPropagation()"> Pago total de la obligación</label>';
+  h+='<input type="date" class="pag-total-fecha" data-pg="'+pg+'" value="'+toInputDate(p.pagadoTotalFecha||'')+'" onclick="event.stopPropagation()" style="font-size:11px;padding:3px 6px;border:1px solid var(--bdr);border-radius:var(--r);background:#fff">';
+  h+='</div>';
+  if(_abonos.length){
+    h+='<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px">';
+    h+='<tr style="color:var(--ink3)"><th style="text-align:left;padding:2px 4px">Fecha</th><th style="text-align:right;padding:2px 4px">Monto</th><th></th></tr>';
+    _abonos.forEach(function(ab,i){
+      h+='<tr style="border-top:1px solid var(--bdr2)"><td style="padding:3px 4px">'+(ab.fecha||'—')+'</td>';
+      h+='<td style="padding:3px 4px;text-align:right;color:var(--green);font-weight:500">'+fmtCOP(parseFloat(String(ab.monto||'').replace(/[^0-9]/g,''))||0)+'</td>';
+      h+='<td><button data-pg="'+pg+'" data-idx="'+i+'" onclick="event.stopPropagation();eliminarAbono(this.dataset.pg,parseInt(this.dataset.idx))" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px">&#215;</button></td></tr>';
+    });
+    h+='<tr style="border-top:2px solid var(--bdr)"><td style="padding:3px 4px;font-weight:600">Total</td><td style="padding:3px 4px;text-align:right;font-weight:600;color:var(--green)">'+fmtCOP(_totalAb)+'</td><td></td></tr>';
+    h+='</table>';
+  } else {
+    h+='<div style="font-size:11px;color:var(--ink3);margin-bottom:8px">Sin abonos registrados</div>';
+  }
+  h+='<div style="display:flex;gap:6px;align-items:center">';
+  h+='<input type="number" id="abono-monto-'+pg+'" placeholder="Monto $" onclick="event.stopPropagation()" style="flex:1;font-size:12px;padding:5px 8px;border:1px solid var(--bdr);border-radius:var(--r);background:#fff">';
+  h+='<input type="date" id="abono-fecha-'+pg+'" onclick="event.stopPropagation()" style="font-size:12px;padding:5px 6px;border:1px solid var(--bdr);border-radius:var(--r);background:#fff">';
+  h+='<button data-pg="'+pg+'" onclick="event.stopPropagation();agregarAbono(this.dataset.pg)" class="btn primary" style="white-space:nowrap">+ Abonar</button>';
+  h+='</div></div>';
+  // Gastos
+  var _gastos=p.gastos||[];
+  var _totalGastos=_gastos.reduce(function(s,g){return s+(parseFloat(String(g.valor||'').replace(/[^0-9]/g,''))||0);},0);
+  h+='<div style="margin-top:8px;background:var(--cream);border-radius:var(--r);padding:10px">';
+  h+='<div style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Gastos del proceso</div>';
+  if(_gastos.length){
+    h+='<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:6px">';
+    h+='<tr style="color:var(--ink3)"><th style="text-align:left;padding:2px 4px">Fecha</th><th style="text-align:left;padding:2px 4px">Concepto</th><th style="text-align:right;padding:2px 4px">Valor</th><th></th></tr>';
+    _gastos.forEach(function(g,i){
+      h+='<tr style="border-top:1px solid var(--bdr2)"><td style="padding:3px 4px;white-space:nowrap">'+(g.fecha||'—')+'</td>';
+      h+='<td style="padding:3px 4px">'+(g.concepto||'—')+'</td>';
+      h+='<td style="padding:3px 4px;text-align:right;color:var(--amber);font-weight:500">'+fmtCOP(parseFloat(String(g.valor||'').replace(/[^0-9]/g,''))||0)+'</td>';
+      h+='<td><button data-pg="'+pg+'" data-idx="'+i+'" onclick="event.stopPropagation();eliminarGasto(this.dataset.pg,parseInt(this.dataset.idx))" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px">&#215;</button></td></tr>';
+    });
+    h+='<tr style="border-top:2px solid var(--bdr)"><td colspan="2" style="padding:3px 4px;font-weight:600">Total gastos</td><td style="padding:3px 4px;text-align:right;font-weight:600;color:var(--amber)">'+fmtCOP(_totalGastos)+'</td><td></td></tr>';
+    h+='</table>';
+  } else {
+    h+='<div style="font-size:11px;color:var(--ink3);margin-bottom:6px">Sin gastos registrados</div>';
+  }
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;align-items:end">';
+  h+='<div><div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Fecha</div><input type="date" id="gasto-fecha-'+pg+'" onclick="event.stopPropagation()" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid var(--bdr);border-radius:var(--r);background:#fff"></div>';
+  h+='<div><div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Concepto</div><input type="text" id="gasto-concepto-'+pg+'" placeholder="Ej. Notificación" onclick="event.stopPropagation()" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid var(--bdr);border-radius:var(--r);background:#fff"></div>';
+  h+='<div><div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Valor $</div><input type="number" id="gasto-valor-'+pg+'" placeholder="0" onclick="event.stopPropagation()" style="width:100%;font-size:11px;padding:4px 6px;border:1px solid var(--bdr);border-radius:var(--r);background:#fff"></div>';
+  h+='<button data-pg="'+pg+'" onclick="event.stopPropagation();agregarGasto(this.dataset.pg)" class="btn primary" style="padding:4px 10px;font-size:11px;white-space:nowrap">+ Agregar</button>';
+  h+='</div></div>';
+  h+='</div>'; // cierre panel 2
+
+  // ── Panel 3: Estado del proceso ───────────────────────────────
+  h+='<div class="es"><h5>Estado del proceso</h5>';
+  // Abogado
+  h+='<div style="margin-bottom:10px"><div class="ci-l" style="margin-bottom:3px">Abogado responsable</div>';
+  h+='<select class="abogado-sel" data-pg="'+pg+'" onclick="event.stopPropagation()" style="font-size:12px;width:100%;padding:5px 8px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--cream)">';
+  h+='<option value="">— Sin asignar —</option>';
+  ABOGADOS.forEach(function(ab){h+='<option value="'+ab+'"'+(p.abogadoResponsable===ab?' selected':'')+'>'+ab+'</option>';});
+  h+='</select></div>';
+  // Fecha ingreso + checkboxes admin
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
+  h+='<div><div class="ci-l" style="margin-bottom:3px">Fecha ingreso a oficina</div>';
+  h+='<input type="date" class="fecha-ingreso-inp" data-pg="'+pg+'" value="'+toInputDate(p.fechaIngreso||'')+'" onclick="event.stopPropagation()" style="width:100%;font-size:12px;padding:5px 8px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--cream)"></div>';
+  h+='<div style="display:flex;flex-direction:column;gap:6px;justify-content:center">';
+  h+='<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" class="hoja-fisica-chk" data-pg="'+pg+'"'+(p.hojaFisica===true?' checked':'')+' onclick="event.stopPropagation()"> Hoja seguimiento física</label>';
+  h+='<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" class="atencion-prio-chk" data-pg="'+pg+'"'+(p.atencionPrioritaria===true?' checked':'')+' onclick="event.stopPropagation()"> ⚡ Atención prioritaria</label>';
+  h+='</div></div>';
+  // Estado buttons
+  h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">';
+  [{k:'prejuridico',l:'Prejurídico'},{k:'juridico',l:'Jurídico'},{k:'acuerdo',l:'Acuerdo'},{k:'terminado',l:'Terminado'}].forEach(function(e){
+    var cls=est===e.k?'active-'+e.k:'';
+    h+='<button class="pb '+cls+'" data-pg="'+pg+'" data-est="'+e.k+'" onclick="event.stopPropagation();setEstado(this.dataset.pg,this.dataset.est)">'+e.l+'</button>';
+  });
+  h+='</div>';
+  // Terminado fields
+  if(est==='terminado'){
+    h+='<div class="ir"><div class="ik">Motivo terminación</div>';
+    h+='<select class="motivo-sel" data-pg="'+pg+'" onclick="event.stopPropagation()" style="font-size:12px;width:100%;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px">';
+    h+='<option value="">— Seleccionar —</option>';
+    Object.entries(MOTIVO_LABEL).forEach(function(e){h+='<option value="'+e[0]+'"'+(p.motivoTerminacion===e[0]?' selected':'')+'>'+e[1]+'</option>';});
+    h+='</select></div>';
+    h+='<div style="background:var(--green-l);border-radius:var(--r);padding:8px 10px;margin-top:8px">';
+    h+='<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;margin-bottom:8px">';
+    h+='<input type="checkbox" class="pago-hon-chk" data-pg="'+pg+'"'+(p.pagoHonorariosRealizado===true?' checked':'')+' onclick="event.stopPropagation()"> ✅ Pago de honorarios realizado</label>';
+    h+='<div style="display:flex;align-items:center;gap:8px">';
+    h+='<span style="font-size:11px;white-space:nowrap">Devolución pagarés:</span>';
+    h+='<input type="date" class="fecha-devol-inp" data-pg="'+pg+'" value="'+toInputDate(p.fechaDevolucionPagares||'')+'" onclick="event.stopPropagation()" style="flex:1;font-size:12px;padding:4px 8px;border:1px solid var(--bdr);border-radius:var(--r);background:#fff">';
+    h+='</div></div>';
+  }
+  // Fecha estado
+  h+='<div class="ir"><div class="ik">Fecha último cambio estado</div>';
+  h+='<input type="date" class="fecha-estado-inp" data-pg="'+pg+'" value="'+toInputDate(p.fechaEstado||'')+'" onclick="event.stopPropagation()" style="font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px;width:100%"></div>';
+  // Radicado, Juzgado, Unificados (only non-prejuridico)
+  if(est!=='prejuridico'){
+    h+='<div class="ir"><div class="ik">Radicado Rama Judicial</div>';
+    h+='<input class="radicado-inp" data-pg="'+pg+'" value="'+(p.radicadoRama||'')+'" placeholder="23 dígitos" maxlength="30" onclick="event.stopPropagation()" style="font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px;width:100%"></div>';
+    var _juzAuto=p.radicadoRama?JUZGADOS[p.radicadoRama.replace(/[^0-9]/g,'').slice(0,12)]||'':'';
+    var _juzFinal=p.juzgado||_juzAuto;
+    h+='<div class="ir"><div class="ik">Juzgado</div>';
+    h+='<input class="juzgado-inp" data-pg="'+pg+'" value="'+_juzFinal+'" placeholder="Ej. Juzgado 1 Civil Municipal" onclick="event.stopPropagation()" style="font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px;width:100%"></div>';
+    if(_juzAuto&&!p.juzgado)h+='<div style="font-size:10px;color:var(--green);margin-top:-4px;margin-bottom:6px">✓ Detectado automáticamente</div>';
+    // Pagarés unificados
+    var _unifs=p.pagaresUnificados||[];
+    h+='<div style="margin-top:6px;margin-bottom:6px"><div class="ci-l" style="margin-bottom:4px">Unificado con pagaré(s)</div>';
+    if(_unifs.length){
+      h+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">';
+      _unifs.forEach(function(u){
+        var linked=pagares.find(function(x){return String(x.pagare)===String(u);});
+        var lname=linked?(linked.titular?linked.titular.nombre||u:u):u;
+        h+='<div style="display:inline-flex;align-items:center;gap:4px;background:var(--blue-l);color:var(--blue);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:500">';
+        h+='<span data-u="'+u+'" onclick="event.stopPropagation();abrirPagare(this.dataset.u)" style="cursor:pointer" title="'+lname+'">&#128203; '+u+'</span>';
+        h+='<button data-pg="'+pg+'" data-upg="'+u+'" onclick="event.stopPropagation();quitarUnificado(this.dataset.pg,this.dataset.upg)" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:12px;padding:0 2px">&#215;</button>';
+        h+='</div>';
+      });
+      h+='</div>';
+    }
+    h+='<div style="display:flex;gap:6px;align-items:center">';
+    h+='<select id="unif-sel-'+pg+'" onclick="event.stopPropagation()" style="flex:1;font-size:12px;padding:4px 8px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--cream)">';
+    h+='<option value="">— Seleccionar pagaré a unificar —</option>';
+    pagares.filter(function(x){return String(x.pagare)!==String(pg)&&_unifs.indexOf(String(x.pagare))<0;})
+    .sort(function(a,b){return String(a.pagare).localeCompare(String(b.pagare),undefined,{numeric:true});})
+    .forEach(function(x){h+='<option value="'+x.pagare+'">'+x.pagare+' — '+(x.titular?x.titular.nombre||'—':'—')+'</option>';});
+    h+='</select>';
+    h+='<button data-pg="'+pg+'" onclick="event.stopPropagation();agregarUnificado(this.dataset.pg)" class="btn sm" style="white-space:nowrap">+ Unificar</button>';
+    h+='</div></div>';
+  } // end if not prejuridico
+  // Notificaciones
+  var _notifDem=p.notifDemandado===true;
+  var _notifCods=p.notifCodeudores||[];
+  var _cods=p.codeudores||[];
+  h+='<div style="background:var(--cream);border-radius:var(--r);padding:8px 10px;margin:6px 0">';
+  h+='<div style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Notificaciones</div>';
+  h+='<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;margin-bottom:4px"><input type="checkbox" class="notif-dem-chk" data-pg="'+pg+'"'+(_notifDem?' checked':'')+' onclick="event.stopPropagation()"> Notificado al demandado</label>';
+  if(_cods.length){
+    _cods.forEach(function(cod,ci){
+      var checked=_notifCods.indexOf(ci)>=0;
+      h+='<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;margin-bottom:4px"><input type="checkbox" class="notif-cod-chk" data-pg="'+pg+'" data-ci="'+ci+'"'+(checked?' checked':'')+' onclick="event.stopPropagation()"> Notificado codeudor: '+(cod.nombre||'Codeudor '+(ci+1))+'</label>';
+    });
+  }
+  h+='</div>';
+  // Vigilancia
+  var _vigL=p.vigiladoLitigio===true;
+  var _vigP=p.vigiladoPropio===true;
+  h+='<div style="background:var(--cream);border-radius:var(--r);padding:8px 10px;margin:6px 0">';
+  h+='<div style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Vigilancia</div>';
+  h+='<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;margin-bottom:4px"><input type="checkbox" class="vig-litigio-chk" data-pg="'+pg+'"'+(_vigL?' checked':'')+' onclick="event.stopPropagation()"> Vigilado en Litigio Virtual</label>';
+  h+='<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" class="vig-propio-chk" data-pg="'+pg+'"'+(_vigP?' checked':'')+' onclick="event.stopPropagation()"> Vigilado propio</label>';
+  h+='</div>';
+  // Etapa + suspensión (solo jurídico)
+  if(est==='juridico'){
+    h+='<div class="ir" style="margin-top:6px"><div class="ik">Etapa proceso ejecutivo</div>';
+    h+='<select class="etapa-sel" data-pg="'+pg+'" onclick="event.stopPropagation()" style="font-size:12px;width:100%;padding:5px 8px;border:1px solid var(--bdr);border-radius:var(--r)">';
+    h+='<option value="">— Seleccionar etapa —</option>'+etapasOpts;
+    h+='</select></div>';
+    if(p.etapaJuridica==='Proceso suspendido'||p.suspenso===true){
+      h+='<div style="background:var(--amber-l);border-radius:var(--r);padding:8px 10px;margin:6px 0;display:flex;align-items:center;gap:8px">';
+      h+='<span style="font-size:12px;font-weight:500;color:var(--amber);white-space:nowrap">⏸ Suspendido hasta:</span>';
+      h+='<input type="date" class="suspenso-hasta" data-pg="'+pg+'" value="'+toInputDate(p.suspensoHasta||'')+'" onclick="event.stopPropagation()" style="flex:1;font-size:12px;padding:4px 8px;border:1px solid var(--bdr);border-radius:var(--r);background:#fff">';
+      h+='</div>';
+    }
+  }
+  // Medidas (no prejuridico)
+  if(est!=='prejuridico'){
+    var tieneMed=p.medidasCautelares===true||p.medidasCautelares==='true';
+    h+='<div class="ir"><div class="ik">Medidas cautelares</div>';
+    h+='<div style="display:flex;gap:8px;margin-top:3px">';
+    h+='<button class="btn sm" style="'+(tieneMed?'background:var(--green-l);color:var(--green);font-weight:600':'')+'" onclick="event.stopPropagation();setMedidas(\''+pg+'\',true);rebuildExp(\''+pg+'\')">Sí</button>';
+    h+='<button class="btn sm" style="'+(!tieneMed?'background:var(--red-l);color:var(--red);font-weight:600':'')+'" onclick="event.stopPropagation();setMedidas(\''+pg+'\',false);rebuildExp(\''+pg+'\')">No</button>';
+    h+='</div></div>';
+    if(tieneMed){
+      h+='<div class="ir"><label style="font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px">Medidas decretadas</label>';
+      h+='<textarea class="medidas-txt" data-pg="'+pg+'" onclick="event.stopPropagation()" style="font-size:12px;min-height:56px;width:100%">'+(p.medidasTxt||'')+'</textarea></div>';
+    }
+  }
+  h+='</div>'; // cierre panel 3
+
+  // ── Panel 4: Actuaciones ──────────────────────────────────────
+  h+='<div class="es" style="min-width:300px"><h5>Actuaciones ('+((p.actuaciones||[]).length)+')</h5>';
+  h+='<button class="btn primary" style="width:100%;margin-bottom:10px" data-pg="'+pg+'" onclick="event.stopPropagation();abrirModalAct(this.dataset.pg)">+ Nueva actuación</button>';
+  var acts=(p.actuaciones||[]).slice().sort(function(a,b){return toYMD(b.fecha||'').localeCompare(toYMD(a.fecha||''));});
+  if(acts.length){
+    h+='<div style="max-height:320px;overflow-y:auto">';
+    acts.slice(0,5).forEach(function(a){
+      h+='<div class="actsrow" style="cursor:default">';
+      h+='<div class="adc"><div class="ad">'+fday(a.fecha)+'</div><div class="am">'+fmon(a.fecha)+'</div></div>';
+      h+='<div class="aline"></div>';
+      h+='<div class="abody"><div class="adesc">'+(a.desc||'')+'</div>';
+      h+='<div class="ameta"><span class="at '+(a.tipo||'otro')+'">'+(TIPO_ICON[a.tipo]||'📌')+' '+(TIPO_LABEL[a.tipo]||a.tipo)+'</span>';
+      if(a.autor)h+='<span class="aauth">'+a.autor+'</span>';
+      h+='</div></div></div>';
+    });
+    h+='</div>';
+    if(acts.length>5)h+='<button class="hist-btn" data-pg="'+pg+'" onclick="event.stopPropagation();verHistorial(this.dataset.pg)">📋 Ver '+acts.length+' actuaciones</button>';
+  } else {
+    h+='<div class="empty-acts">Sin actuaciones aún</div>';
+  }
+  h+='</div>'; // cierre panel 4
+  h+='</div>'; // cierre exp-inner
+  return h;
+}
+
+// ── FIELD SETTERS ─────────────────────────────────────────────
+function setEstado(pid,est){
+  var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!p)return;
+  p.estadoProceso=est;
+  savePagaresLocal();rebuildExp(pid);debouncedSync(p,500);renderTabla();
+}
+function setField(pid,field,val){
+  var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!p)return;
+  p[field]=val;savePagaresLocal();debouncedSync(p,500);
+}
+function setMedidas(pid,val){
+  var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!p)return;
+  p.medidasCautelares=val;savePagaresLocal();rebuildExp(pid);debouncedSync(p,500);
+}
+function setMedidasTxt(pid,val){setField(pid,'medidasTxt',val);}
+function setAbogado(pid,val){setField(pid,'abogadoResponsable',val);}
+function setEtapa(pid,val){
+  var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!p)return;
+  p.etapaJuridica=val;
+  if(val==='Proceso suspendido')p.suspenso=true;
+  else p.suspenso=false;
+  savePagaresLocal();rebuildExp(pid);debouncedSync(p,500);
+}
+function setRadicado(pid,val){
+  var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!p)return;
+  p.radicadoRama=val;
+  var codigo=val.replace(/[^0-9]/g,'').slice(0,12);
+  if(codigo.length===12&&JUZGADOS[codigo]&&!p.juzgado){
+    p.juzgado=JUZGADOS[codigo];
+    var juzEl=document.querySelector('.juzgado-inp[data-pg="'+pid+'"]');
+    if(juzEl)juzEl.value=p.juzgado;
+    toast('Juzgado detectado: '+p.juzgado);
+  }
+  savePagaresLocal();debouncedSync(p,1000);
+}
+function setJuzgado(pid,val){setField(pid,'juzgado',val);}
+function setMotivo(pid,val){setField(pid,'motivoTerminacion',val);}
+function setCostas(pid,val){setField(pid,'costas',val);}
+function setHonorarios(pid,pct){
+  var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!p)return;
+  p.honorariosPct=pct;savePagaresLocal();
+  var r=calcHonorarios(p,pct);
+  var hv=document.getElementById('hon-val-'+pid);
+  var ht=document.getElementById('hon-tot-'+pid);
+  if(hv)hv.textContent=r.pctNum>0?fmtCOP(r.hon):'—';
+  if(ht)ht.textContent=r.pctNum>0?fmtCOP(r.total):p.totalDeuda;
+  debouncedSync(p,1000);
+}
+function setTel2(pid,val){
+  var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!p)return;
+  if(!p.titular)p.titular={};
+  p.titular.telefono2=val;savePagaresLocal();debouncedSync(p,1000);
+}
+function setEmail(pid,val){
+  var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!p)return;
+  if(!p.titular)p.titular={};
+  p.titular.email=val;savePagaresLocal();debouncedSync(p,1000);
+}
+function setCodTel2(pid,ci,val){
+  var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!p||!p.codeudores||!p.codeudores[ci])return;
+  p.codeudores[ci].telefono2=val;savePagaresLocal();debouncedSync(p,1000);
+}
+function setCodEmail(pid,ci,val){
+  var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!p||!p.codeudores||!p.codeudores[ci])return;
+  p.codeudores[ci].email=val;savePagaresLocal();debouncedSync(p,1000);
+}
+function setSuspensoHasta(pid,val){setField(pid,'suspensoHasta',val);}
+function setPagadoTotal(pid,val){
+  var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!p)return;p.pagadoTotal=val;savePagaresLocal();rebuildExp(pid);debouncedSync(p,500);
+}
+function setPagadoTotalFecha(pid,val){setField(pid,'pagadoTotalFecha',val);}
+function setNotifDemandado(pid,val){setField(pid,'notifDemandado',val);}
+function setNotifCodeudor(pid,ci,val){
+  var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!p)return;
+  if(!p.notifCodeudores)p.notifCodeudores=[];
+  if(val){if(p.notifCodeudores.indexOf(ci)<0)p.notifCodeudores.push(ci);}
+  else{p.notifCodeudores=p.notifCodeudores.filter(function(x){return x!==ci;});}
+  savePagaresLocal();debouncedSync(p,500);
+}
+function setVigiladoLitigio(pid,val){setField(pid,'vigiladoLitigio',val);}
+function setVigiladoPropio(pid,val){setField(pid,'vigiladoPropio',val);}
+function setFechaEstado(pid,val){setField(pid,'fechaEstado',val?cleanDate(val):'');}
+
+// ── EVENT DELEGATION ──────────────────────────────────────────
+document.addEventListener('change',function(ev){
+  var t=ev.target;var pg=t.dataset.pg;if(!pg)return;
+  if(t.classList.contains('abogado-sel')){setAbogado(pg,t.value);}
+  else if(t.classList.contains('etapa-sel')){setEtapa(pg,t.value);}
+  else if(t.classList.contains('motivo-sel')){setMotivo(pg,t.value);}
+  else if(t.classList.contains('suspenso-hasta')){setSuspensoHasta(pg,t.value);}
+  else if(t.classList.contains('pag-total-fecha')){setPagadoTotalFecha(pg,t.value);}
+  else if(t.classList.contains('fecha-estado-inp')){setFechaEstado(pg,t.value);}
+  else if(t.classList.contains('pag-total-chk')){setPagadoTotal(pg,t.checked);}
+  else if(t.classList.contains('notif-dem-chk')){setNotifDemandado(pg,t.checked);}
+  else if(t.classList.contains('notif-cod-chk')){setNotifCodeudor(pg,parseInt(t.dataset.ci),t.checked);}
+  else if(t.classList.contains('hoja-fisica-chk')){setField(pg,'hojaFisica',t.checked);}
+  else if(t.classList.contains('atencion-prio-chk')){setField(pg,'atencionPrioritaria',t.checked);}
+  else if(t.classList.contains('vig-litigio-chk')){setVigiladoLitigio(pg,t.checked);}
+  else if(t.classList.contains('vig-propio-chk')){setVigiladoPropio(pg,t.checked);}
+  else if(t.classList.contains('pago-hon-chk')){setField(pg,'pagoHonorariosRealizado',t.checked);}
+  else if(t.classList.contains('fecha-ingreso-inp')){setField(pg,'fechaIngreso',t.value);}
+  else if(t.classList.contains('fecha-devol-inp')){setField(pg,'fechaDevolucionPagares',t.value);}
+});
+document.addEventListener('input',function(ev){
+  var t=ev.target;var pg=t.dataset.pg;if(!pg)return;
+  if(t.classList.contains('hon-pct-inp')){setHonorarios(pg,t.value);}
+  else if(t.classList.contains('radicado-inp')){setRadicado(pg,t.value);}
+  else if(t.classList.contains('medidas-txt')){setMedidasTxt(pg,t.value);}
+  else if(t.classList.contains('tel2-inp')){setTel2(pg,t.value);}
+  else if(t.classList.contains('email-inp')){setEmail(pg,t.value);}
+  else if(t.classList.contains('juzgado-inp')){setJuzgado(pg,t.value);}
+  else if(t.classList.contains('costas-inp')){setCostas(pg,t.value);}
+  else if(t.classList.contains('cod-tel2-inp')){setCodTel2(pg,parseInt(t.dataset.ci),t.value);}
+  else if(t.classList.contains('cod-email-inp')){setCodEmail(pg,parseInt(t.dataset.ci),t.value);}
+});
+
+// ── ABONOS / GASTOS / HON CAUSADOS ───────────────────────────
+function agregarAbono(pid){
+  var pp=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!pp)return;
+  var montoEl=document.getElementById('abono-monto-'+pid);
+  var fechaEl=document.getElementById('abono-fecha-'+pid);
+  var monto=montoEl?parseFloat(montoEl.value)||0:0;
+  var fecha=fechaEl?fechaEl.value:'';
+  if(!monto){toast('Ingresa un monto válido');return;}
+  if(!pp.abonos)pp.abonos=[];
+  var fechaFmt=fecha?cleanDate(fecha):new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'});
+  pp.abonos.push({monto:monto,fecha:fechaFmt});
+  savePagaresLocal();debouncedSync(pp,500);rebuildExp(pid);
+}
+function eliminarAbono(pid,idx){
+  var pp=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!pp||!pp.abonos)return;
+  pp.abonos.splice(idx,1);savePagaresLocal();debouncedSync(pp,500);rebuildExp(pid);
+}
+function agregarGasto(pid){
+  var pp=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!pp)return;
+  var fEl=document.getElementById('gasto-fecha-'+pid);
+  var cEl=document.getElementById('gasto-concepto-'+pid);
+  var vEl=document.getElementById('gasto-valor-'+pid);
+  var valor=vEl?parseFloat(vEl.value)||0:0;
+  var concepto=cEl?cEl.value.trim():'';
+  var fecha=fEl?fEl.value:'';
+  if(!valor){toast('Ingresa un valor válido');return;}
+  if(!concepto){toast('Ingresa el concepto');return;}
+  if(!pp.gastos)pp.gastos=[];
+  if(/^\d{4}-\d{2}-\d{2}$/.test(fecha)){var fp=fecha.split('-');fecha=fp[2]+'/'+fp[1]+'/'+fp[0];}
+  pp.gastos.push({fecha:fecha,concepto:concepto,valor:valor});
+  savePagaresLocal();debouncedSync(pp,500);rebuildExp(pid);
+}
+function eliminarGasto(pid,idx){
+  var pp=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!pp||!pp.gastos)return;
+  pp.gastos.splice(idx,1);savePagaresLocal();debouncedSync(pp,500);rebuildExp(pid);
+}
+function agregarHonCausado(pid){
+  var pp=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!pp)return;
+  var vEl=document.getElementById('honcaus-valor-'+pid);
+  var fEl=document.getElementById('honcaus-fecha-'+pid);
+  var valor=vEl?parseFloat(vEl.value)||0:0;
+  var fecha=fEl?fEl.value:'';
+  if(!valor){toast('Ingresa un valor');return;}
+  if(!pp.honCausados)pp.honCausados=[];
+  if(/^\d{4}-\d{2}-\d{2}$/.test(fecha)){var fp=fecha.split('-');fecha=fp[2]+'/'+fp[1]+'/'+fp[0];}
+  pp.honCausados.push({fecha:fecha,valor:valor});
+  savePagaresLocal();debouncedSync(pp,500);rebuildExp(pid);
+}
+function eliminarHonCausado(pid,idx){
+  var pp=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!pp||!pp.honCausados)return;
+  pp.honCausados.splice(idx,1);savePagaresLocal();debouncedSync(pp,500);rebuildExp(pid);
+}
+
+// ── UNIFICADOS ───────────────────────────────────────────────
+function agregarUnificado(pid){
+  var pp=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!pp)return;
+  var sel=document.getElementById('unif-sel-'+pid);
+  if(!sel||!sel.value){toast('Selecciona un pagaré');return;}
+  var upg=sel.value;
+  if(!pp.pagaresUnificados)pp.pagaresUnificados=[];
+  if(pp.pagaresUnificados.indexOf(upg)>=0){toast('Ya está unificado');return;}
+  pp.pagaresUnificados.push(upg);
+  var other=pagares.find(function(x){return String(x.pagare)===String(upg);});
+  if(other){
+    if(!other.pagaresUnificados)other.pagaresUnificados=[];
+    if(other.pagaresUnificados.indexOf(String(pid))<0){other.pagaresUnificados.push(String(pid));debouncedSync(other,600);}
+  }
+  savePagaresLocal();debouncedSync(pp,500);rebuildExp(pid);toast('Pagaré '+upg+' unificado con '+pid);
+}
+function quitarUnificado(pid,upg){
+  var pp=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!pp||!pp.pagaresUnificados)return;
+  pp.pagaresUnificados=pp.pagaresUnificados.filter(function(x){return x!==String(upg);});
+  var other=pagares.find(function(x){return String(x.pagare)===String(upg);});
+  if(other&&other.pagaresUnificados){
+    other.pagaresUnificados=other.pagaresUnificados.filter(function(x){return x!==String(pid);});
+    debouncedSync(other,600);
+  }
+  savePagaresLocal();debouncedSync(pp,500);rebuildExp(pid);
+}
+
+// ── ACTUACIONES ───────────────────────────────────────────────
+function abrirModalAct(pid){
+  _actPagIdModal=pid;
+  var today=new Date().toISOString().slice(0,10);
+  document.getElementById('act-fecha').value=today;
+  document.getElementById('act-tipo').value='llamada';
+  document.getElementById('act-desc').value='';
+  document.getElementById('act-resultado').value='';
+  document.getElementById('act-proxima').value='';
+  document.getElementById('act-acuerdo-fecha').value='';
+  document.getElementById('act-acuerdo-valor').value='';
+  document.getElementById('act-juzgado').value='';
+  document.getElementById('modal-act-title').textContent='Nueva actuación — Pagaré '+pid;
+  openModal('modal-act');
+}
+function guardarActuacion(){
+  if(!_actPagIdModal)return;
+  var p=pagares.find(function(x){return String(x.pagare)===String(_actPagIdModal);});
+  if(!p)return;
+  var fecha=cleanDate(document.getElementById('act-fecha').value);
+  var desc=document.getElementById('act-desc').value.trim();
+  if(!desc){alert('Describe la actuación');return;}
+  var act={
+    id:'A'+Date.now(),fecha:fecha,tipo:document.getElementById('act-tipo').value,desc:desc,
+    resultado:document.getElementById('act-resultado').value,
+    proximaAccion:document.getElementById('act-proxima').value,
+    acuerdoFecha:cleanDate(document.getElementById('act-acuerdo-fecha').value),
+    acuerdoValor:document.getElementById('act-acuerdo-valor').value,
+    juzgado:document.getElementById('act-juzgado').value,
+    autor:usuario?usuario.nombre:''
+  };
+  if(!p.actuaciones)p.actuaciones=[];
+  p.actuaciones.push(act);
+  savePagaresLocal();syncActuacion(p.pagare,act);
+  closeModal('modal-act');rebuildExp(_actPagIdModal);renderTabla();
+  toast('Actuación guardada');
+}
+function verHistorial(pid){
+  var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!p)return;
+  var acts=(p.actuaciones||[]).slice().sort(function(a,b){return toYMD(b.fecha||'').localeCompare(toYMD(a.fecha||''));});
+  var h='<div class="card"><div class="ch"><h3>Historial — Pagaré '+pid+' — '+(p.titular?p.titular.nombre||'—':'—')+'</h3>';
+  h+='<button class="btn sm" data-pg="'+pid+'" onclick="abrirPagare(this.dataset.pg)">← Volver</button></div>';
+  acts.forEach(function(a){
+    h+='<div class="actsrow">';
+    h+='<div class="adc"><div class="ad">'+fday(a.fecha)+'</div><div class="am">'+fmon(a.fecha)+' '+fyr(a.fecha)+'</div></div>';
+    h+='<div class="aline"></div>';
+    h+='<div class="abody"><div class="adesc">'+(a.desc||'')+'</div>';
+    h+='<div class="ameta"><span class="at '+(a.tipo||'otro')+'">'+(TIPO_ICON[a.tipo]||'📌')+' '+(TIPO_LABEL[a.tipo]||a.tipo)+'</span>';
+    if(a.resultado)h+='<span style="font-size:11px;color:var(--ink3)">'+(RES_LABEL[a.resultado]||a.resultado)+'</span>';
+    if(a.autor)h+='<span class="aauth">'+a.autor+'</span>';
+    h+='</div></div></div>';
+  });
+  h+='</div>';
+  document.getElementById('content').innerHTML=h;
+}
+
+// ── TODAS LAS ACTUACIONES ─────────────────────────────────────
+function renderActuaciones(){
+  document.getElementById('topbar-actions').innerHTML='';
+  var all=[];
+  pagares.forEach(function(p){
+    (p.actuaciones||[]).forEach(function(a){
+      all.push({fecha:cleanDate(a.fecha||''),tipo:a.tipo,desc:a.desc,resultado:a.resultado,autor:a.autor,
+        pagare:p.pagare,titular:p.titular?p.titular.nombre||'—':'—',totalDeuda:p.totalDeuda,cc:p.titular?p.titular.cc||'':''});
+    });
+  });
+  all.sort(function(a,b){return toYMD(b.fecha||'').localeCompare(toYMD(a.fecha||''));});
+  function applyFilters(){
+    var q=_actsSearch.toLowerCase().trim();
+    return all.filter(function(a){
+      if(_actsTipo!=='todos'&&a.tipo!==_actsTipo)return false;
+      if(_actsFecha){var fp=_actsFecha.split('-');var fd=fp.length===3?fp[2]+'/'+fp[1]+'/'+fp[0]:_actsFecha;if(!(a.fecha||'').startsWith(fd))return false;}
+      if(q){var hay=String(a.pagare)+' '+(a.titular||'').toLowerCase()+' '+(a.cc||'').toLowerCase()+' '+(a.tipo||'').toLowerCase()+' '+(a.desc||'').toLowerCase()+' '+(a.autor||'').toLowerCase()+' '+(a.fecha||'');if(!hay.includes(q))return false;}
+      return true;
+    });
+  }
+  function buildRows(){
+    var fil=applyFilters();
+    var rows=fil.length?fil.map(function(a){
+      return '<div class="actsrow" data-pg="'+a.pagare+'" onclick="abrirPagare(this.dataset.pg)" style="cursor:pointer">'
+        +'<div class="adc"><div class="ad">'+fday(a.fecha)+'</div><div class="am">'+fmon(a.fecha)+' '+fyr(a.fecha)+'</div></div>'
+        +'<div class="aline"></div>'
+        +'<div class="abody">'
+        +'<div style="font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:2px">Pagaré '+a.pagare+' — '+a.titular+' · <span style="color:var(--red)">'+a.totalDeuda+'</span></div>'
+        +'<div class="adesc">'+(a.desc||'')+'</div>'
+        +'<div class="ameta"><span class="at '+(a.tipo||'otro')+'">'+(TIPO_ICON[a.tipo]||'📌')+' '+(TIPO_LABEL[a.tipo]||a.tipo)+'</span>'
+        +(a.resultado?'<span style="font-size:11px;color:var(--ink3)">'+(RES_LABEL[a.resultado]||a.resultado)+'</span>':'')
+        +(a.autor?'<span class="aauth">'+a.autor+'</span>':'')
+        +'</div></div></div>';
+    }).join(''):'<div class="empty-acts">Sin actuaciones para los filtros seleccionados.</div>';
+    document.getElementById('acts-list').innerHTML='<div style="font-size:12px;color:var(--ink3);margin-bottom:8px">'+fil.length+' / '+all.length+' registros</div>'+rows;
+  }
+  var tipoSel=function(v){return _actsTipo===v?' selected':'';};
+  document.getElementById('content').innerHTML=
+    '<div class="card"><div class="ch"><h3>Todas las actuaciones</h3></div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">'
+    +'<input id="acts-q" placeholder="🔍 Buscar..." value="'+_actsSearch+'" style="flex:1;min-width:200px;font-size:13px;padding:7px 10px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--cream)">'
+    +'<input id="acts-fecha" type="date" value="'+_actsFecha+'" style="font-size:12px;padding:6px 8px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--cream)">'
+    +'<select id="acts-tipo" style="font-size:12px;padding:6px 8px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--cream)">'
+    +'<option value="todos"'+tipoSel('todos')+'>Todos los tipos</option>'
+    +'<option value="llamada"'+tipoSel('llamada')+'>📞 Llamada</option>'
+    +'<option value="visita"'+tipoSel('visita')+'>🏢 Visita</option>'
+    +'<option value="whatsapp"'+tipoSel('whatsapp')+'>💬 WhatsApp</option>'
+    +'<option value="correo"'+tipoSel('correo')+'>✉ Correo</option>'
+    +'<option value="demanda"'+tipoSel('demanda')+'>⚖ Demanda</option>'
+    +'<option value="memorial"'+tipoSel('memorial')+'>📝 Memorial</option>'
+    +'<option value="audiencia"'+tipoSel('audiencia')+'>🏛 Audiencia</option>'
+    +'<option value="notificacion"'+tipoSel('notificacion')+'>📬 Notificación</option>'
+    +'<option value="acuerdo"'+tipoSel('acuerdo')+'>🤝 Acuerdo</option>'
+    +'<option value="terminacion"'+tipoSel('terminacion')+'>✅ Terminación</option>'
+    +'<option value="otro"'+tipoSel('otro')+'>📌 Otro</option>'
+    +'</select>'
+    +'<button class="btn sm" onclick="limpiarFiltrosActs()">✕ Limpiar</button>'
+    +'</div>'
+    +'<div id="acts-list"></div></div>';
+  setTimeout(function(){
+    var qEl=document.getElementById('acts-q');
+    var fEl=document.getElementById('acts-fecha');
+    var tEl=document.getElementById('acts-tipo');
+    if(qEl)qEl.addEventListener('input',function(){_actsSearch=this.value;buildRows();});
+    if(fEl)fEl.addEventListener('change',function(){_actsFecha=this.value;buildRows();});
+    if(tEl)tEl.addEventListener('change',function(){_actsTipo=this.value;buildRows();});
+    buildRows();
+  },0);
+}
+function limpiarFiltrosActs(){_actsSearch='';_actsTipo='todos';_actsFecha='';renderActuaciones();}
+
+// ── INFORME GENERAL ───────────────────────────────────────────
+function renderInforme(){
+  document.getElementById('topbar-actions').innerHTML='';
+  var totalPag=pagares.length;
+  var totalDeuda=pagares.reduce(function(s,p){return s+parseCOP(p.totalDeuda);},0);
+  var totalCap=pagares.reduce(function(s,p){return s+parseCOP(p.saldoCapital);},0);
+  var totalInter=pagares.reduce(function(s,p){return s+parseCOP(p.intereses);},0);
+  var totalActs=pagares.reduce(function(s,p){return s+(p.actuaciones?p.actuaciones.length:0);},0);
+  var porEstado={prejuridico:0,juridico:0,acuerdo:0,terminado:0};
+  pagares.forEach(function(p){var e=p.estadoProceso||'prejuridico';if(porEstado[e]!==undefined)porEstado[e]++;});
+  var conAct=pagares.filter(function(p){return p.actuaciones&&p.actuaciones.length>0;}).length;
+  var porTipo={};pagares.forEach(function(p){(p.actuaciones||[]).forEach(function(a){var t=a.tipo||'otro';porTipo[t]=(porTipo[t]||0)+1;});});
+  var porAutor={};pagares.forEach(function(p){(p.actuaciones||[]).forEach(function(a){var au=a.autor||'Sin asignar';porAutor[au]=(porAutor[au]||0)+1;});});
+  function pct(n,t){return t>0?Math.round(n/t*100)+'%':'0%';}
+  function bar(n,t,col){var w=t>0?Math.round(n/t*100):0;return '<div style="background:var(--bdr2);border-radius:4px;height:8px;margin-top:4px"><div style="width:'+w+'%;height:8px;background:'+col+';border-radius:4px"></div></div>';}
+  var h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">';
+  h+='<div class="card" style="text-align:center"><div class="sl">Total pagarés</div><div class="sv">'+totalPag+'</div></div>';
+  h+='<div class="card" style="text-align:center"><div class="sl">Total deuda</div><div style="font-size:18px;font-weight:700;color:var(--red);margin:4px 0">'+fmtCOP(totalDeuda)+'</div></div>';
+  h+='<div class="card" style="text-align:center"><div class="sl">Saldo capital</div><div style="font-size:18px;font-weight:700;color:var(--red);margin:4px 0">'+fmtCOP(totalCap)+'</div></div>';
+  h+='<div class="card" style="text-align:center"><div class="sl">Intereses</div><div style="font-size:18px;font-weight:700;color:var(--amber);margin:4px 0">'+fmtCOP(totalInter)+'</div></div>';
+  h+='<div class="card" style="text-align:center"><div class="sl">Actuaciones</div><div class="sv">'+totalActs+'</div></div>';
+  h+='</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">';
+  h+='<div class="card"><div class="ch"><h3>Estado del proceso</h3></div>';
+  [['prejuridico','Prejurídico','var(--amber)'],['juridico','Jurídico','var(--red)'],['acuerdo','Acuerdo','var(--green)'],['terminado','Terminado','var(--ink3)']].forEach(function(e){
+    var n=porEstado[e[0]]||0;
+    h+='<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><span>'+e[1]+'</span><span style="font-weight:500">'+n+' ('+pct(n,totalPag)+')</span></div>'+bar(n,totalPag,e[2])+'</div>';
+  });
+  h+='</div>';
+  h+='<div class="card"><div class="ch"><h3>Gestiones por tipo</h3></div>';
+  h+='<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between"><span>Con actuaciones</span><span style="font-weight:500">'+conAct+' ('+pct(conAct,totalPag)+')</span></div>'+bar(conAct,totalPag,'var(--blue)')+'</div>';
+  Object.entries(porTipo).sort(function(a,b){return b[1]-a[1];}).forEach(function(e){
+    h+='<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px"><span>'+(TIPO_LABEL[e[0]]||e[0])+'</span><span style="font-weight:500">'+e[1]+'</span></div>';
+  });
+  h+='</div></div>';
+  h+='<div class="card" style="margin-bottom:16px"><div class="ch"><h3>Por abogado</h3></div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px">';
+  Object.entries(porAutor).sort(function(a,b){return b[1]-a[1];}).forEach(function(e){
+    h+='<div class="ci"><div class="ci-l">'+e[0]+'</div><div class="ci-v">'+e[1]+' gestiones</div></div>';
+  });
+  h+='</div></div>';
+  // Estado procesal
+  var juridicos=pagares.filter(function(p){return p.estadoProceso==='juridico';});
+  var porEtapa={};juridicos.forEach(function(p){var e=p.etapaJuridica||'Sin etapa';porEtapa[e]=(porEtapa[e]||0)+1;});
+  var suspendidos=pagares.filter(function(p){return p.suspenso===true;});
+  h+='<div class="card" style="margin-bottom:16px"><div class="ch"><h3>Estado procesal ('+juridicos.length+' en jurídico)</h3></div>';
+  if(Object.keys(porEtapa).length){
+    h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:10px">';
+    Object.entries(porEtapa).sort(function(a,b){return b[1]-a[1];}).forEach(function(e){
+      h+='<div class="ci"><div class="ci-l">'+e[0]+'</div><div class="ci-v" style="font-weight:600">'+e[1]+'</div></div>';
+    });
+    h+='</div>';
+  }
+  if(suspendidos.length){
+    h+='<div style="padding-top:8px;border-top:1px solid var(--bdr2)"><div style="font-size:11px;color:var(--amber);font-weight:600;margin-bottom:6px">⏸ Suspendidos: '+suspendidos.length+'</div>';
+    suspendidos.forEach(function(p){
+      var n=p.titular?p.titular.nombre||'':'';
+      h+='<div style="font-size:12px;margin-bottom:3px;cursor:pointer" data-pg="'+p.pagare+'" onclick="abrirPagare(this.dataset.pg)">📋 '+p.pagare+' — '+n+(p.suspensoHasta?' · hasta: '+p.suspensoHasta:'')+'</div>';
+    });
+    h+='</div>';
+  }
+  h+='</div>';
+  // Recaudo
+  var conAbonos=pagares.filter(function(p){return p.abonos&&p.abonos.length>0;});
+  var pagadosTotales=pagares.filter(function(p){return p.pagadoTotal===true;});
+  var totalRecaudado=pagares.reduce(function(s,p){return s+(p.abonos||[]).reduce(function(s2,a){return s2+(parseFloat(String(a.monto||'').replace(/[^0-9]/g,''))||0);},0);},0);
+  h+='<div class="card"><div class="ch"><h3>Estado de recaudo</h3></div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:8px 0 12px">';
+  h+='<div class="ci" style="text-align:center"><div class="ci-l">Total recaudado</div><div style="font-size:16px;font-weight:700;color:var(--green)">'+fmtCOP(totalRecaudado)+'</div></div>';
+  h+='<div class="ci" style="text-align:center"><div class="ci-l">Con abonos</div><div class="ci-v">'+conAbonos.length+'</div></div>';
+  h+='<div class="ci" style="text-align:center"><div class="ci-l">Cancelados total</div><div style="font-size:16px;font-weight:600;color:var(--green)">'+pagadosTotales.length+'</div></div>';
+  h+='</div>';
+  if(conAbonos.length){
+    h+='<table style="width:100%;border-collapse:collapse;font-size:12px">';
+    h+='<tr style="color:var(--ink3);border-bottom:1px solid var(--bdr)"><th style="text-align:left;padding:4px 6px">Deudor</th><th>Pagaré</th><th style="text-align:right;padding:4px 6px">Abonado</th><th style="text-align:center">Estado</th></tr>';
+    conAbonos.forEach(function(p){
+      var n=p.titular?p.titular.nombre||'':'';
+      var tot=p.abonos.reduce(function(s,a){return s+(parseFloat(String(a.monto||'').replace(/[^0-9]/g,''))||0);},0);
+      var ef=p.pagadoTotal===true;
+      h+='<tr style="border-bottom:1px solid var(--bdr2);cursor:pointer" data-pg="'+p.pagare+'" onclick="abrirPagare(this.dataset.pg)">';
+      h+='<td style="padding:4px 6px">'+n+'</td><td style="padding:4px 6px">'+p.pagare+'</td>';
+      h+='<td style="padding:4px 6px;text-align:right;color:var(--green);font-weight:500">'+fmtCOP(tot)+'</td>';
+      h+='<td style="padding:4px 6px;text-align:center">'+(ef?'<span style="color:var(--green);font-weight:600">✅ Cancelado</span>':'<span style="color:var(--amber)">Parcial</span>')+'</td></tr>';
+    });
+    h+='</table>';
+  }
+  h+='</div>';
+  // Sin gestiones
+  var sinG=pagares.filter(function(p){return !p.actuaciones||p.actuaciones.length===0;})
+    .sort(function(a,b){return toYMD(a.inicioMora||'').localeCompare(toYMD(b.inicioMora||''));});
+  h+='<div class="card" style="margin-top:16px"><div class="ch"><h3>Sin gestiones ('+sinG.length+')</h3></div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-top:8px">';
+  sinG.forEach(function(p){
+    var n=p.titular?p.titular.nombre||'':'';
+    h+='<div class="ci" data-pg="'+p.pagare+'" onclick="abrirPagare(this.dataset.pg)" style="cursor:pointer">';
+    h+='<div class="ci-l">'+p.pagare+' — '+n+'</div>';
+    h+='<div style="display:flex;justify-content:space-between"><span style="color:var(--red);font-weight:600">'+p.totalDeuda+'</span><span style="font-size:11px;color:var(--ink3)">'+(p.inicioMora||'—')+'</span></div></div>';
+  });
+  h+='</div></div>';
+  document.getElementById('content').innerHTML=h;
+}
+
+// ── DETALLE PAGARÉ ────────────────────────────────────────────
+function renderDetalle(pid){
+  var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
+  if(!p){document.getElementById('content').innerHTML='<p>No encontrado</p>';return;}
+  document.getElementById('topbar-actions').innerHTML=
+    '<button class="btn sm" onclick="currentPagId=null;renderPagares()">← Volver</button>'+
+    '<button class="btn primary" data-pg="'+pid+'" onclick="abrirModalAct(this.dataset.pg)">+ Nueva actuación</button>';
+  document.getElementById('content').innerHTML='<div class="card">'+buildExp(p)+'</div>';
+}
+
+// ── NUEVO PAGARÉ ──────────────────────────────────────────────
+var _npCodCount=0;
+function agregarFilaCod(){
+  _npCodCount++;
+  var idx=_npCodCount;
+  var cont=document.getElementById('np-cods-container');
+  if(!cont)return;
+  var div=document.createElement('div');
+  div.id='np-cod-'+idx;
+  div.style.cssText='background:var(--cream);border-radius:6px;padding:8px;margin-bottom:8px';
+  div.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+    +'<span style="font-size:11px;font-weight:500">Codeudor '+idx+'</span>'
+    +'<button class="rm-cod" onclick="var p=this.closest(\'[id^=np-cod-]\');if(p)p.remove();" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px">&times;</button></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
+    +'<div><div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Nombre *</div><input id="npc-nombre-'+idx+'" placeholder="Nombre completo" style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px"></div>'
+    +'<div><div style="font-size:10px;color:var(--ink3);margin-bottom:2px">C.C.</div><input id="npc-cc-'+idx+'" placeholder="CC" style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px"></div>'
+    +'<div><div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Teléfono</div><input id="npc-tel-'+idx+'" placeholder="Tel" style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px"></div>'
+    +'<div><div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Tel 2</div><input id="npc-tel2-'+idx+'" placeholder="Tel 2" style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px"></div>'
+    +'<div><div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Email</div><input id="npc-email-'+idx+'" placeholder="email" style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px"></div>'
+    +'<div><div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Ciudad</div><input id="npc-ciudad-'+idx+'" placeholder="Ciudad" style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px"></div>'
+    +'<div style="grid-column:1/-1"><div style="font-size:10px;color:var(--ink3);margin-bottom:2px">Dirección</div><input id="npc-dir-'+idx+'" placeholder="Dirección" style="width:100%;font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px"></div>'
+    +'</div>';
+  cont.appendChild(div);
+}
+function abrirModalNuevoPagare(){
+  _npCodCount=0;
+  var cont=document.getElementById('np-cods-container');if(cont)cont.innerHTML='';
+  ['np-pagare','np-nombre','np-cc','np-tel','np-tel2','np-email','np-ciudad','np-dir',
+   'np-capital','np-intereses','np-capitaliz','np-total','np-mora','np-ultimo-pago'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  var estEl=document.getElementById('np-estado');if(estEl)estEl.value='prejuridico';
+  var abgEl=document.getElementById('np-abogado');if(abgEl)abgEl.value='';
+  var entEl=document.getElementById('np-entidad');if(entEl)entEl.value='Cooperativa de Yarumal';
+  openModal('modal-nuevo-pagare');
+}
+function guardarNuevoPagare(){
+  var pag=(document.getElementById('np-pagare')||{}).value||'';pag=pag.trim();
+  var nom=(document.getElementById('np-nombre')||{}).value||'';nom=nom.trim();
+  if(!pag){alert('El número de pagaré es obligatorio');return;}
+  if(!nom){alert('El nombre del titular es obligatorio');return;}
+  if(pagares.find(function(x){return String(x.pagare)===pag;})){alert('Ya existe un pagaré con ese número');return;}
+  function getV(id){var el=document.getElementById(id);return el?el.value.trim():'';}
+  function fmtD(v){if(!v)return'';var p=v.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:v;}
+  var cods=[];
+  for(var i=1;i<=_npCodCount;i++){
+    var nEl=document.getElementById('npc-nombre-'+i);
+    if(!nEl||!document.getElementById('np-cod-'+i))continue;
+    var nomC=nEl.value.trim();if(!nomC)continue;
+    cods.push({nombre:nomC,cc:getV('npc-cc-'+i),telefono:getV('npc-tel-'+i),telefono2:getV('npc-tel2-'+i),email:getV('npc-email-'+i),ciudad:getV('npc-ciudad-'+i),direccion:getV('npc-dir-'+i),lugarExpedicion:''});
+  }
+  var np={pagare:pag,entidad:getV('np-entidad')||'Cooperativa de Yarumal',
+    titular:{nombre:nom,cc:getV('np-cc'),lugarExpedicion:'',direccion:getV('np-dir'),ciudad:getV('np-ciudad'),telefono:getV('np-tel'),telefono2:getV('np-tel2'),email:getV('np-email')},
+    codeudores:cods,valorInicial:'',numCuotas:'',valorCuota:'',tasaInteres:'',
+    fechaInicio:'',fechaVencimiento:'',inicioMora:fmtD(getV('np-mora')),ultimoPago:fmtD(getV('np-ultimo-pago')),
+    saldoCapital:getV('np-capital'),intereses:getV('np-intereses'),capitalizacion:getV('np-capitaliz'),totalDeuda:getV('np-total'),
+    aportes:'',totalAportes:'',ahorros:'',estadoProceso:getV('np-estado')||'prejuridico',
+    etapaJuridica:'',radicadoRama:'',fechaEstado:'',medidasCautelares:false,medidasTxt:'',motivoTerminacion:'',
+    abogadoResponsable:getV('np-abogado'),honorariosPct:'',suspenso:false,suspensoHasta:'',
+    abonos:[],pagadoTotal:false,pagadoTotalFecha:'',gastos:[],honCausados:[],costas:'',
+    notifDemandado:false,notifCodeudores:[],vigiladoLitigio:false,vigiladoPropio:false,
+    hojaFisica:false,atencionPrioritaria:false,fechaIngreso:'',pagoHonorariosRealizado:false,
+    fechaDevolucionPagares:'',pagaresUnificados:[],actuaciones:[]};
+  pagares.unshift(np);savePagaresLocal();syncPagare(np);
+  closeModal('modal-nuevo-pagare');renderTabla();toast('Pagaré '+pag+' agregado');
+}
+
+// ── ELIMINAR PAGARÉ ────────────────────────────────────────────
+function eliminarPagareDeSheets(pid,callback){
+  var url=LS.get('cya3_api_url')||API;if(!url){if(callback)callback(false);return;}
+  apiCall({action:'deletePagare',pagare:pid},function(err,d){if(callback)callback(!err&&d&&d.ok,err?err.message:(d&&d.msg));});
+}
+function eliminarPagareCompleto(pid){
+  if(!confirm('¿Eliminar pagaré '+pid+' del HTML Y de Google Sheets?'))return;
+  pagares=pagares.filter(function(p){return String(p.pagare)!==String(pid);});
+  expandedRows.delete(String(pid));savePagaresLocal();renderTabla();
+  toast('Eliminado localmente. Eliminando de Sheets...');
+  eliminarPagareDeSheets(pid,function(ok,msg){
+    if(ok)toast('✓ Pagaré '+pid+' eliminado de Sheets');
+    else toast('Local OK. Error en Sheets: '+(msg||'desconocido'));
+  });
+}
+function limpiarYEliminarInvalidos(){
+  var BLOCKLIST=['10000'];
+  var invalidos=pagares.filter(function(p){
+    var pg=String(p.pagare||'').trim();
+    return !pg.length||!/^\d+$/.test(pg)||BLOCKLIST.indexOf(pg)>=0;
+  });
+  if(!invalidos.length){toast('No hay pagarés inválidos');return;}
+  var lista=invalidos.map(function(p){return '"'+p.pagare+'"';}).join(', ');
+  if(!confirm('Se eliminarán '+invalidos.length+' pagaré(s) inválido(s): '+lista+'\n\n¿Continuar?'))return;
+  var ids=invalidos.map(function(p){return String(p.pagare);});
+  pagares=pagares.filter(function(p){return ids.indexOf(String(p.pagare))<0;});
+  savePagaresLocal();renderTabla();toast('Eliminados del HTML. Eliminando de Sheets...');
+  var done=0;
+  ids.forEach(function(pid){
+    eliminarPagareDeSheets(pid,function(){done++;if(done===ids.length)toast('✓ Limpieza completada');});
+  });
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+window._initApp = function init(){
+  if (!window._loginVerified) return; // No ejecutar sin login
+  // ── Cargar desde localStorage si hay cache ──
+  var cache=LS.get('cya3_pagares');
+  if(cache&&cache.length>0){
+    var seen=new Set();
+    pagares=cache.filter(function(p){
+      var k=String(p.pagare);if(seen.has(k))return false;seen.add(k);return true;
+    }).map(function(p){return sanitizarPagare(p);});
+    pagares=pagares.filter(function(p){
+      var pg=String(p.pagare||'').trim();
+      return pg.length>0&&/^[0-9]+$/.test(pg)&&pg!=='10000';
+    });
+  }
+  API=LS.get('cya3_api_url')||'';
+  applyUser();
+  if(!usuario){openModal('modal-usuario');}
+  // ── Renderizar lo que hay (cache o vacío) ──
+  renderView();
+  if(!API){
+    setSS('e','Sin URL — configura Apps Script');
+    setTimeout(function(){
+      toast('⚙ Configura la URL del Apps Script para cargar los pagarés desde Google Sheets');
+    },1000);
+  } else {
+    // Sheets es la fuente de verdad — siempre cargar al inicio
+    setSS('','Conectando con Sheets...');
+    cargarDatos();
+  }
+};
+// Ejecutar solo si ya hay sesión válida al cargar
+if (window._loginVerified) window._initApp();
+</script>
+
+</div><!-- /app-wrapper -->
+</body>
+</html>
