@@ -217,6 +217,8 @@ textarea{resize:vertical;min-height:56px;}
         <button class="btn sm" style="width:100%;margin-bottom:4px;background:#e8f5e9;color:#2e7d32" onclick="repararEncabezadosSheet()">🔧 Reparar encabezados</button>
         <button class="btn sm" style="width:100%;margin-bottom:4px;background:#fce4ec;color:#c62828" onclick="repararAlineacionSheet()">⚙ Reparar alineación</button>
         <button class="btn sm" style="width:100%;margin-bottom:4px;background:#ede7f6;color:#4527a0" onclick="normalizarFechasSheet()">📅 Normalizar fechas</button>
+        <button class="btn sm" style="width:100%;margin-bottom:4px;background:#e0f2f1;color:#00695c" onclick="verColumnasSheet()">👁 Ver columnas (seguro)</button>
+        <button class="btn sm" style="width:100%;margin-bottom:4px;background:#fbe9e7;color:#bf360c" onclick="corregirDesplazamientoSheet()">↔ Corregir desplazamiento</button>
         <button class="btn sm" style="width:100%;margin-bottom:4px;background:#fff3e0;color:#e65100" onclick="diagnosticarSubida()">🔍 Diagnosticar</button>
         <button class="btn sm" style="width:100%;background:#e8eaf6;color:#283593" onclick="testJuzgadoCompleto()">🔬 Test ciclo completo</button>
       </div>
@@ -1117,6 +1119,33 @@ function repararEncabezadosSheet(){
     if(err){setSS('e','Error');toast('Error: '+err.message);return;}
     if(d&&d.ok){setSS('','✓ OK');toast('✓ '+d.msg);}
     else{setSS('e','Error');toast('Error: '+(d&&d.msg||JSON.stringify(d)));}
+  });
+}
+function verColumnasSheet(){
+  var url=LS.get('cya3_api_url')||API;if(!url){toast('Configura URL');return;}
+  setSS('','Leyendo columnas...');
+  jsonpCall(url+'?action=verColumnas',function(err,d){
+    if(err){setSS('e','Error');toast('Error: '+err.message);return;}
+    setSS('','Listo');
+    if(d&&d.ok){
+      alert('COLUMNAS DE LA HOJA ('+d.totalColumnas+' en total)\n'+
+            'Formato:  índice | encabezado = valor de la primera fila\n\n'+
+            d.columnas.join('\n'));
+    } else { alert('Error: '+(d&&d.msg||JSON.stringify(d))); }
+  });
+}
+function corregirDesplazamientoSheet(){
+  var url=LS.get('cya3_api_url')||API;if(!url){toast('Configura URL');return;}
+  if(!confirm('IMPORTANTE — lee antes de continuar:\n\n'+
+    'Esto desplaza una posición a la derecha todos los datos desde la columna 18 en adelante, '+
+    'para realinearlos con los encabezados.\n\n'+
+    'Ejecútalo UNA SOLA VEZ, y solo si ya verificaste con "Ver columnas" que los datos están corridos.\n\n'+
+    '¿Continuar?'))return;
+  setSS('','Corrigiendo desplazamiento...');
+  jsonpCall(url+'?action=corregirDesplazamiento',function(err,d){
+    if(err){setSS('e','Error');toast('Error: '+err.message);return;}
+    if(d&&d.ok){setSS('','✓ OK');alert('✓ '+d.msg);setTimeout(cargarDatos,800);}
+    else{setSS('e','Error');alert('No se aplicó ningún cambio:\n\n'+(d&&d.msg||JSON.stringify(d)));}
   });
 }
 function normalizarFechasSheet(){
