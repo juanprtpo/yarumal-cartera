@@ -304,6 +304,7 @@ textarea{resize:vertical;min-height:56px;}
       <div><label>Intereses</label><input type="text" id="np-intereses" placeholder="$0"></div>
       <div><label>Capitalización</label><input type="text" id="np-capitaliz" placeholder="$0"></div>
       <div><label>Total deuda</label><input type="text" id="np-total" placeholder="$0"></div>
+      <div><label>Fecha primera cuota</label><input type="date" id="np-1cuota"></div>
       <div><label>Inicio mora</label><input type="date" id="np-mora"></div>
       <div><label>Último pago</label><input type="date" id="np-ultimo-pago"></div>
       <div><label>Estado</label>
@@ -672,6 +673,7 @@ function sanitizarPagare(p){
       return Object.assign({},a,{fecha:cleanDate(a.fecha||'')});
     }),
     fechaEstado:fe,
+    fechaPrimeraCuota:cleanDate(p.fechaPrimeraCuota||''),
     radicadoRama:rad,
     etapaJuridica:etapa,
     suspenso:p.suspenso===true||p.suspenso==='true',
@@ -883,6 +885,7 @@ function buildPayload(p){
     valorInicial:p.valorInicial||'',numCuotas:p.numCuotas||'',
     valorCuota:p.valorCuota||'',tasaInteres:p.tasaInteres||'',
     fechaInicio:cleanDate(p.fechaInicio||''),fechaVencimiento:cleanDate(p.fechaVencimiento||''),
+    fechaPrimeraCuota:cleanDate(p.fechaPrimeraCuota||''),
     inicioMora:cleanDate(p.inicioMora||''),ultimoPago:cleanDate(p.ultimoPago||''),
     aportes:p.aportes||'',totalAportes:p.totalAportes||'',ahorros:p.ahorros||'',
     gastos:JSON.stringify(p.gastos||[]),
@@ -1400,6 +1403,8 @@ function buildExp(p){
   h+=ir('Valor inicial',p.valorInicial);h+=ir('N.° cuotas',p.numCuotas);
   h+=ir('Valor cuota',p.valorCuota);h+=ir('Tasa interés',p.tasaInteres);
   h+=ir('Fecha inicio',p.fechaInicio);h+=ir('Vencimiento',p.fechaVencimiento);
+  h+='<div class="ir"><div class="ik">Fecha primera cuota</div>';
+  h+='<input type="date" class="fecha-1cuota-inp" data-pg="'+pg+'" value="'+toInputDate(p.fechaPrimeraCuota||'')+'" onclick="event.stopPropagation()" style="font-size:12px;padding:4px 6px;border:1px solid var(--bdr);border-radius:4px;width:100%"></div>';
   h+=ir('Inicio mora',p.inicioMora);h+=ir('Último pago',p.ultimoPago);
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px">';
   h+='<div class="ci"><div class="ci-l">Capital</div><div class="ci-v">'+(p.saldoCapital||'—')+'</div></div>';
@@ -1772,6 +1777,7 @@ document.addEventListener('change',function(ev){
   else if(t.classList.contains('pago-hon-chk')){setField(pg,'pagoHonorariosRealizado',t.checked);}
   else if(t.classList.contains('fecha-ingreso-inp')){setField(pg,'fechaIngreso',t.value);}
   else if(t.classList.contains('fecha-devol-inp')){setField(pg,'fechaDevolucionPagares',t.value);}
+  else if(t.classList.contains('fecha-1cuota-inp')){setField(pg,'fechaPrimeraCuota',cleanDate(t.value));}
 });
 document.addEventListener('input',function(ev){
   var t=ev.target;var pg=t.dataset.pg;if(!pg)return;
@@ -2142,7 +2148,7 @@ function abrirModalNuevoPagare(){
   _npCodCount=0;
   var cont=document.getElementById('np-cods-container');if(cont)cont.innerHTML='';
   ['np-pagare','np-nombre','np-cc','np-tel','np-tel2','np-email','np-ciudad','np-dir',
-   'np-capital','np-intereses','np-capitaliz','np-total','np-mora','np-ultimo-pago'].forEach(function(id){
+   'np-capital','np-intereses','np-capitaliz','np-total','np-mora','np-ultimo-pago','np-1cuota'].forEach(function(id){
     var el=document.getElementById(id);if(el)el.value='';
   });
   var estEl=document.getElementById('np-estado');if(estEl)estEl.value='prejuridico';
@@ -2168,7 +2174,7 @@ function guardarNuevoPagare(){
   var np={pagare:pag,entidad:getV('np-entidad')||'Cooperativa de Yarumal',
     titular:{nombre:nom,cc:getV('np-cc'),lugarExpedicion:'',direccion:getV('np-dir'),ciudad:getV('np-ciudad'),telefono:getV('np-tel'),telefono2:getV('np-tel2'),email:getV('np-email')},
     codeudores:cods,valorInicial:'',numCuotas:'',valorCuota:'',tasaInteres:'',
-    fechaInicio:'',fechaVencimiento:'',inicioMora:fmtD(getV('np-mora')),ultimoPago:fmtD(getV('np-ultimo-pago')),
+    fechaInicio:'',fechaVencimiento:'',fechaPrimeraCuota:fmtD(getV('np-1cuota')),inicioMora:fmtD(getV('np-mora')),ultimoPago:fmtD(getV('np-ultimo-pago')),
     saldoCapital:getV('np-capital'),intereses:getV('np-intereses'),capitalizacion:getV('np-capitaliz'),totalDeuda:getV('np-total'),
     aportes:'',totalAportes:'',ahorros:'',estadoProceso:getV('np-estado')||'prejuridico',
     etapaJuridica:'',radicadoRama:'',fechaEstado:'',medidasCautelares:false,medidasTxt:'',motivoTerminacion:'',
