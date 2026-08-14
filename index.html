@@ -87,12 +87,16 @@ nav{flex:1;padding:8px 0;overflow-y:auto;}
 .badge.jur{background:var(--red-l);color:var(--red);}
 .badge.acu{background:var(--green-l);color:var(--green);}
 .badge.ter{background:var(--bdr2);color:var(--ink3);}
+.badge.cas{background:#ede7f6;color:#5e35b1;}
 /* PROCESS BUTTONS */
-.pb{padding:5px 10px;border-radius:var(--r);font-size:11px;font-weight:600;border:2px solid var(--bdr);background:var(--white);cursor:pointer;transition:all .15s;}
-.pb.active-prej{background:var(--amber-l);border-color:var(--amber);color:var(--amber);}
-.pb.active-jur{background:var(--red-l);border-color:var(--red);color:var(--red);}
-.pb.active-acu{background:var(--green-l);border-color:var(--green);color:var(--green);}
-.pb.active-ter{background:var(--bdr2);border-color:var(--ink3);color:var(--ink3);}
+.pb{padding:6px 12px;border-radius:var(--r);font-size:11px;font-weight:600;border:2px solid var(--bdr);background:var(--white);color:var(--ink3);cursor:pointer;transition:all .15s;}
+.pb:hover{border-color:var(--ink3);}
+/* Estado seleccionado: fondo sólido + texto blanco = imposible de confundir */
+.pb.active-prej{background:var(--amber);border-color:var(--amber);color:#fff;box-shadow:0 2px 6px rgba(244,162,97,.4);}
+.pb.active-jur{background:var(--red);border-color:var(--red);color:#fff;box-shadow:0 2px 6px rgba(230,57,70,.4);}
+.pb.active-cas{background:#5e35b1;border-color:#5e35b1;color:#fff;box-shadow:0 2px 6px rgba(94,53,177,.4);}
+.pb.active-acu{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 2px 6px rgba(42,157,143,.4);}
+.pb.active-ter{background:var(--ink3);border-color:var(--ink3);color:#fff;box-shadow:0 2px 6px rgba(107,114,128,.4);}
 /* ACTS */
 .actsrow{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr2);cursor:pointer;transition:background .1s;}
 .actsrow:hover{background:var(--cream);}
@@ -315,6 +319,7 @@ textarea{resize:vertical;min-height:56px;}
         <select id="np-estado">
           <option value="prejuridico">Prejurídico</option>
           <option value="juridico">Jurídico</option>
+          <option value="castigo">Castigo</option>
           <option value="acuerdo">Acuerdo</option>
           <option value="terminado">Terminado</option>
         </select>
@@ -503,7 +508,7 @@ let _actPagIdModal=null;
 let _debounceTimers={};
 
 // ── CONSTANTES ──────────────────────────────────────────
-const ESTADO_LABEL={prejuridico:'Prejurídico',juridico:'Jurídico',acuerdo:'Acuerdo de pago',terminado:'Terminado'};
+const ESTADO_LABEL={prejuridico:'Prejurídico',juridico:'Jurídico',castigo:'Castigo',acuerdo:'Acuerdo de pago',terminado:'Terminado'};
 const JUZGADOS={"051074089001": "JUZGADO 001 PROMISCUO MUNICIPAL DE BRICEÑO", "058874089001": "JUZGADO 001 PROMISCUO MUNICIPAL DE YARUMAL", "058874089002": "JUZGADO 002 PROMISCUO MUNICIPAL DE YARUMAL", "050884003001": "JUZGADO 001 CIVIL MUNICIPAL DE BELLO", "050884003002": "JUZGADO 002 CIVIL MUNICIPAL DE BELLO", "050884003003": "JUZGADO 003 CIVIL MUNICIPAL DE BELLO", "050884003004": "JUZGADO 004 CIVIL MUNICIPAL DE BELLO", "050884003005": "JUZGADO 005 CIVIL MUNICIPAL DE BELLO", "050884189001": "JUZGADO 001 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE BELLO", "050884189002": "JUZGADO 002 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE BELLO", "050014003001": "JUZGADO 001 CIVIL MUNICIPAL DE MEDELLÍN", "050014003002": "JUZGADO 002 CIVIL MUNICIPAL DE MEDELLÍN", "050014003003": "JUZGADO 003 CIVIL MUNICIPAL DE MEDELLÍN", "050014003004": "JUZGADO 004 CIVIL MUNICIPAL DE MEDELLÍN", "050014003005": "JUZGADO 005 CIVIL MUNICIPAL DE MEDELLÍN", "050014003006": "JUZGADO 006 CIVIL MUNICIPAL DE MEDELLÍN", "050014003007": "JUZGADO 007 CIVIL MUNICIPAL DE MEDELLÍN", "050014003008": "JUZGADO 008 CIVIL MUNICIPAL DE MEDELLÍN", "050014003009": "JUZGADO 009 CIVIL MUNICIPAL DE MEDELLÍN", "050014003010": "JUZGADO 010 CIVIL MUNICIPAL DE MEDELLÍN", "050014003011": "JUZGADO 011 CIVIL MUNICIPAL DE MEDELLÍN", "050014003012": "JUZGADO 012 CIVIL MUNICIPAL DE MEDELLÍN", "050014003013": "JUZGADO 013 CIVIL MUNICIPAL DE MEDELLÍN", "050014003014": "JUZGADO 014 CIVIL MUNICIPAL DE MEDELLÍN", "050014003015": "JUZGADO 015 CIVIL MUNICIPAL DE MEDELLÍN", "050014003016": "JUZGADO 016 CIVIL MUNICIPAL DE MEDELLÍN", "050014003017": "JUZGADO 017 CIVIL MUNICIPAL DE MEDELLÍN", "050014003018": "JUZGADO 018 CIVIL MUNICIPAL DE MEDELLÍN", "050014003019": "JUZGADO 019 CIVIL MUNICIPAL DE MEDELLÍN", "050014003020": "JUZGADO 020 CIVIL MUNICIPAL DE MEDELLÍN", "050014003021": "JUZGADO 021 CIVIL MUNICIPAL DE MEDELLÍN", "050014003022": "JUZGADO 022 CIVIL MUNICIPAL DE MEDELLÍN", "050014003023": "JUZGADO 023 CIVIL MUNICIPAL DE MEDELLÍN", "050014003024": "JUZGADO 024 CIVIL MUNICIPAL DE MEDELLÍN", "050014003025": "JUZGADO 025 CIVIL MUNICIPAL DE MEDELLÍN", "050014003026": "JUZGADO 026 CIVIL MUNICIPAL DE MEDELLÍN", "050014003027": "JUZGADO 027 CIVIL MUNICIPAL DE MEDELLÍN", "050014003028": "JUZGADO 028 CIVIL MUNICIPAL DE MEDELLÍN", "050014003029": "JUZGADO 029 CIVIL MUNICIPAL DE MEDELLÍN", "050014003030": "JUZGADO 030 CIVIL MUNICIPAL DE MEDELLÍN", "050014003031": "JUZGADO 031 CIVIL MUNICIPAL DE MEDELLÍN", "050014003032": "JUZGADO 032 CIVIL MUNICIPAL DE MEDELLÍN", "050014003033": "JUZGADO 033 CIVIL MUNICIPAL DE MEDELLÍN", "050014003034": "JUZGADO 034 CIVIL MUNICIPAL DE MEDELLÍN", "050014003035": "JUZGADO 035 CIVIL MUNICIPAL DE MEDELLÍN", "056314003001": "JUZGADO 001 CIVIL MUNICIPAL DE SABANETA", "056314003002": "JUZGADO 002 CIVIL MUNICIPAL DE SABANETA", "056314003003": "JUZGADO 003 CIVIL MUNICIPAL DE SABANETA", "056643189001": "JUZGADO 001 PROMISCUO DEL CIRCUITO DE SAN PEDRO DE LOS MILAGROS", "056644089001": "JUZGADO 001 PROMISCUO MUNICIPAL DE SAN PEDRO DE LOS MILAGROS", "050014189001": "JUZGADO 001 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189002": "JUZGADO 002 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189003": "JUZGADO 003 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189004": "JUZGADO 004 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189005": "JUZGADO 005 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189006": "JUZGADO 006 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189007": "JUZGADO 007 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189008": "JUZGADO 008 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189009": "JUZGADO 009 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189010": "JUZGADO 010 DE PEQUEÑAS CAUSAS  Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014189011": "JUZGADO 011 DE PEQUEÑAS CAUSAS Y COMPETENCIA MÚLTIPLE DE MEDELLÍN", "050014303001": "JUZGADO 001 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303002": "JUZGADO 002 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303003": "JUZGADO 003 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303004": "JUZGADO 004 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303005": "JUZGADO 005 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303006": "JUZGADO 006 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303007": "JUZGADO 007 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303008": "JUZGADO 008 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303009": "JUZGADO 009 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN", "050014303010": "JUZGADO 010 CIVIL MUNICIPAL DE EJECUCIÓN DE SENTENCIAS DE MEDELLÍN"};
 const ETAPAS=['Elaboración de demanda','Presentación de demanda','Reparto y admisión','Notificación al demandado','Notificación al codeudor','Traslado de excepciones','Decreto de medidas cautelares','Embargo y secuestro de bienes','Audiencia inicial','Audiencia de instrucción y juzgamiento','Sentencia','Liquidación del crédito','Mandamiento de pago','Liquidación del crédito aprobada','Remate de bienes','Terminación por pago','Terminación por acuerdo','Archivo del proceso','Proceso suspendido'];
 const TIPO_LABEL={llamada:'Llamada',visita:'Visita',whatsapp:'WhatsApp',correo:'Correo',memorial:'Memorial',demanda:'Demanda',audiencia:'Audiencia',notificacion:'Notificación',acuerdo:'Acuerdo de pago',terminacion:'Terminación',documento:'Documento',otro:'Otro'};
@@ -629,7 +634,7 @@ function moraHtml(dias){
   return'<span class="mt-baja">'+dias+' días</span>';
 }
 function estadoBadge(e){
-  var cls={prejuridico:'prej',juridico:'jur',acuerdo:'acu',terminado:'ter'};
+  var cls={prejuridico:'prej',juridico:'jur',castigo:'cas',acuerdo:'acu',terminado:'ter'};
   return'<span class="badge '+(cls[e]||'prej')+'">'+(ESTADO_LABEL[e]||e)+'</span>';
 }
 function ir(k,v){
@@ -1206,6 +1211,7 @@ function renderDash(){
   var total=pagares.length;
   var totalDeuda=pagares.reduce(function(s,p){return s+parseCOP(p.totalDeuda);},0);
   var juridicos=pagares.filter(function(p){return p.estadoProceso==='juridico';}).length;
+  var castigos=pagares.filter(function(p){return p.estadoProceso==='castigo';}).length;
   var totalActs=pagares.reduce(function(s,p){return s+(p.actuaciones||[]).length;},0);
   var allActs=[];
   pagares.forEach(function(p){
@@ -1217,7 +1223,7 @@ function renderDash(){
   var h='<div class="stats-grid">'
     +'<div class="sc gold"><div class="sl">Pagarés en mora</div><div class="sv">'+total+'</div><div class="ss">Cooperativa de Yarumal</div></div>'
     +'<div class="sc red"><div class="sl">Total deuda</div><div class="sv" style="font-size:18px">$'+(totalDeuda/1e6).toFixed(1)+'M</div><div class="ss">capital + intereses + cap.</div></div>'
-    +'<div class="sc blue"><div class="sl">En etapa jurídica</div><div class="sv">'+juridicos+'</div><div class="ss">'+(total-juridicos)+' en prejurídico</div></div>'
+    +'<div class="sc blue"><div class="sl">En etapa jurídica</div><div class="sv">'+juridicos+'</div><div class="ss">'+castigos+' en castigo</div></div>'
     +'<div class="sc green"><div class="sl">Actuaciones</div><div class="sv">'+totalActs+'</div><div class="ss">registradas en total</div></div>'
     +'</div>'
     +'<div class="card"><div class="ch"><h3>Actuaciones recientes</h3>'
@@ -1260,6 +1266,7 @@ function renderPagares(){
         '<option value="activos" '+(filtroEstado==='activos'?'selected':'')+'>Activos (Prej+Jur+Acuerdo)</option>'+
         '<option value="prejuridico" '+(filtroEstado==='prejuridico'?'selected':'')+'>Prejurídico</option>'+
         '<option value="juridico" '+(filtroEstado==='juridico'?'selected':'')+'>Jurídico</option>'+
+        '<option value="castigo" '+(filtroEstado==='castigo'?'selected':'')+'>Castigo</option>'+
         '<option value="acuerdo" '+(filtroEstado==='acuerdo'?'selected':'')+'>Acuerdo</option>'+
         '<option value="terminado" '+(filtroEstado==='terminado'?'selected':'')+'>Terminado</option>'+
       '</select>'+
@@ -1584,8 +1591,8 @@ function buildExp(p){
   h+='</div></div>';
   // Estado buttons
   h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">';
-  [{k:'prejuridico',l:'Prejurídico'},{k:'juridico',l:'Jurídico'},{k:'acuerdo',l:'Acuerdo'},{k:'terminado',l:'Terminado'}].forEach(function(e){
-    var cls=est===e.k?'active-'+e.k:'';
+  [{k:'prejuridico',l:'Prejurídico',c:'prej'},{k:'juridico',l:'Jurídico',c:'jur'},{k:'castigo',l:'Castigo',c:'cas'},{k:'acuerdo',l:'Acuerdo',c:'acu'},{k:'terminado',l:'Terminado',c:'ter'}].forEach(function(e){
+    var cls=est===e.k?'active-'+e.c:'';
     h+='<button class="pb '+cls+'" data-pg="'+pg+'" data-est="'+e.k+'" onclick="event.stopPropagation();setEstado(this.dataset.pg,this.dataset.est)">'+e.l+'</button>';
   });
   h+='</div>';
@@ -1664,7 +1671,7 @@ function buildExp(p){
   h+='<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="checkbox" class="vig-propio-chk" data-pg="'+pg+'"'+(_vigP?' checked':'')+' onclick="event.stopPropagation()"> Vigilado propio</label>';
   h+='</div>';
   // Etapa + suspensión (solo jurídico)
-  if(est==='juridico'){
+  if(est==='juridico'||est==='castigo'){
     h+='<div class="ir" style="margin-top:6px"><div class="ik">Etapa proceso ejecutivo</div>';
     h+='<select class="etapa-sel" data-pg="'+pg+'" onclick="event.stopPropagation()" style="font-size:12px;width:100%;padding:5px 8px;border:1px solid var(--bdr);border-radius:var(--r)">';
     h+='<option value="">— Seleccionar etapa —</option>'+etapasOpts;
@@ -2069,7 +2076,7 @@ function renderInforme(){
   var totalCap=pagares.reduce(function(s,p){return s+parseCOP(p.saldoCapital);},0);
   var totalInter=pagares.reduce(function(s,p){return s+parseCOP(p.intereses);},0);
   var totalActs=pagares.reduce(function(s,p){return s+(p.actuaciones?p.actuaciones.length:0);},0);
-  var porEstado={prejuridico:0,juridico:0,acuerdo:0,terminado:0};
+  var porEstado={prejuridico:0,juridico:0,castigo:0,acuerdo:0,terminado:0};
   pagares.forEach(function(p){var e=p.estadoProceso||'prejuridico';if(porEstado[e]!==undefined)porEstado[e]++;});
   var conAct=pagares.filter(function(p){return p.actuaciones&&p.actuaciones.length>0;}).length;
   var porTipo={};pagares.forEach(function(p){(p.actuaciones||[]).forEach(function(a){var t=a.tipo||'otro';porTipo[t]=(porTipo[t]||0)+1;});});
@@ -2085,7 +2092,7 @@ function renderInforme(){
   h+='</div>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">';
   h+='<div class="card"><div class="ch"><h3>Estado del proceso</h3></div>';
-  [['prejuridico','Prejurídico','var(--amber)'],['juridico','Jurídico','var(--red)'],['acuerdo','Acuerdo','var(--green)'],['terminado','Terminado','var(--ink3)']].forEach(function(e){
+  [['prejuridico','Prejurídico','var(--amber)'],['juridico','Jurídico','var(--red)'],['castigo','Castigo','#5e35b1'],['acuerdo','Acuerdo','var(--green)'],['terminado','Terminado','var(--ink3)']].forEach(function(e){
     var n=porEstado[e[0]]||0;
     h+='<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><span>'+e[1]+'</span><span style="font-weight:500">'+n+' ('+pct(n,totalPag)+')</span></div>'+bar(n,totalPag,e[2])+'</div>';
   });
@@ -2103,10 +2110,10 @@ function renderInforme(){
   });
   h+='</div></div>';
   // Estado procesal
-  var juridicos=pagares.filter(function(p){return p.estadoProceso==='juridico';});
+  var juridicos=pagares.filter(function(p){return p.estadoProceso==='juridico'||p.estadoProceso==='castigo';});
   var porEtapa={};juridicos.forEach(function(p){var e=p.etapaJuridica||'Sin etapa';porEtapa[e]=(porEtapa[e]||0)+1;});
   var suspendidos=pagares.filter(function(p){return p.suspenso===true;});
-  h+='<div class="card" style="margin-bottom:16px"><div class="ch"><h3>Estado procesal ('+juridicos.length+' en jurídico)</h3></div>';
+  h+='<div class="card" style="margin-bottom:16px"><div class="ch"><h3>Estado procesal ('+juridicos.length+' en jurídico y castigo)</h3></div>';
   if(Object.keys(porEtapa).length){
     h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:10px">';
     Object.entries(porEtapa).sort(function(a,b){return b[1]-a[1];}).forEach(function(e){
