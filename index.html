@@ -514,7 +514,8 @@ const ETAPAS=['Elaboración de demanda','Presentación de demanda','Reparto y ad
 const TIPO_LABEL={llamada:'Llamada',visita:'Visita',whatsapp:'WhatsApp',correo:'Correo',memorial:'Memorial',demanda:'Demanda',audiencia:'Audiencia',notificacion:'Notificación',acuerdo:'Acuerdo de pago',terminacion:'Terminación',documento:'Documento',otro:'Otro'};
 const TIPO_ICON={llamada:'📞',visita:'🏢',whatsapp:'💬',correo:'✉️',memorial:'📄',demanda:'⚖️',audiencia:'🏛️',notificacion:'📬',acuerdo:'🤝',terminacion:'✅',documento:'📁',otro:'📌'};
 const RES_LABEL={'exitoso':'✓ Exitoso','sin-respuesta':'Sin respuesta','negativo':'✗ Negativo','promesa-pago':'💬 Promesa de pago','numero-errado':'⚠ Dato errado'};
-const MOTIVO_LABEL={'pago-total':'Pago total','acuerdo-pago':'Acuerdo de pago','transaccion':'Transacción','desistimiento':'Desistimiento','prescripcion':'Prescripción','sentencia-absolutoria':'Sentencia absolutoria','otro':'Otro'};
+const MOTIVO_LABEL={'pago-total':'Pago total','acuerdo-pago':'Acuerdo de pago','transaccion':'Transacción','desistimiento':'Desistimiento','prescripcion':'Prescripción','insolvencia-economica':'Insolvencia económica','sentencia-absolutoria':'Sentencia absolutoria','otro':'Otro'};
+const MOTIVO_CASTIGO={'ilocalizado':'Ilocalizado','insolvencia-economica':'Insolvencia económica','sin-bienes':'Sin bienes embargables','fallecido':'Deudor fallecido','deuda-incobrable':'Deuda incobrable','costo-beneficio':'Costo-beneficio desfavorable','prescripcion':'Prescripción','proceso-liquidatorio':'Proceso liquidatorio o de insolvencia','otro':'Otro'};
 const ABOGADOS=['Juan Pablo Restrepo','Luis Fernando Merino','Sonia Restrepo','Verónica Salazar'];
 
 // ── HELPERS FINANCIEROS ─────────────────────────────────
@@ -683,6 +684,9 @@ function sanitizarPagare(p){
     }),
     fechaEstado:fe,
     fechaPrimeraCuota:cleanDate(p.fechaPrimeraCuota||''),
+    motivoCastigo:p.motivoCastigo||'',
+    motivoCastigoTxt:p.motivoCastigoTxt||'',
+    fechaCastigo:cleanDate(p.fechaCastigo||''),
     radicadoRama:rad,
     etapaJuridica:etapa,
     suspenso:p.suspenso===true||p.suspenso==='true',
@@ -884,6 +888,8 @@ function buildPayload(p){
     radicadoRama:p.radicadoRama||'',fechaEstado:cleanDate(p.fechaEstado||''),
     medidasCautelares:String(p.medidasCautelares===true||p.medidasCautelares==='true'),
     medidasTxt:p.medidasTxt||'',motivoTerminacion:p.motivoTerminacion||'',
+    motivoCastigo:p.motivoCastigo||'',motivoCastigoTxt:p.motivoCastigoTxt||'',
+    fechaCastigo:cleanDate(p.fechaCastigo||''),
     honorariosPct:p.honorariosPct||'',abogadoResponsable:p.abogadoResponsable||'',juzgado:p.juzgado||'',
     suspenso:String(p.suspenso===true||p.suspenso==='true'),suspensoHasta:cleanDate(p.suspensoHasta||''),
     abonos:JSON.stringify(p.abonos||[]),
@@ -1380,6 +1386,7 @@ function renderTabla(){
       +'<td style="text-align:center">'+actsStr+'</td>'
       +'<td>'+estadoBadge(p.estadoProceso)
         +(p.etapaJuridica?'<div style="font-size:10px;color:var(--ink3);margin-top:2px">'+p.etapaJuridica+'</div>':'')
+        +(p.estadoProceso==='castigo'&&p.motivoCastigo?'<div style="font-size:10px;color:#5e35b1">⚑ '+(MOTIVO_CASTIGO[p.motivoCastigo]||p.motivoCastigo)+'</div>':'')
         +(p.atencionPrioritaria===true?'<div style="font-size:10px;color:var(--red);font-weight:600">⚡ Prioritario</div>':'')
         +respStr+'</td>'
       +'<td style="font-size:12px">'+ults+'</td>'
@@ -1596,6 +1603,24 @@ function buildExp(p){
     h+='<button class="pb '+cls+'" data-pg="'+pg+'" data-est="'+e.k+'" onclick="event.stopPropagation();setEstado(this.dataset.pg,this.dataset.est)">'+e.l+'</button>';
   });
   h+='</div>';
+  // Castigo: motivo del castigo
+  if(est==='castigo'){
+    h+='<div style="background:#ede7f6;border-radius:var(--r);padding:10px;margin:8px 0">';
+    h+='<div style="font-size:10px;color:#5e35b1;text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px">Motivo del castigo</div>';
+    h+='<select class="motivo-castigo-sel" data-pg="'+pg+'" onclick="event.stopPropagation()" style="font-size:12px;width:100%;padding:6px 8px;border:1px solid #b39ddb;border-radius:var(--r);background:#fff;margin-bottom:8px">';
+    h+='<option value="">— Seleccionar motivo —</option>';
+    Object.entries(MOTIVO_CASTIGO).forEach(function(e){
+      h+='<option value="'+e[0]+'"'+(p.motivoCastigo===e[0]?' selected':'')+'>'+e[1]+'</option>';
+    });
+    h+='</select>';
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+    h+='<span style="font-size:11px;white-space:nowrap;color:#5e35b1">Fecha del castigo:</span>';
+    h+='<input type="date" class="fecha-castigo-inp" data-pg="'+pg+'" value="'+toInputDate(p.fechaCastigo||'')+'" onclick="event.stopPropagation()" style="flex:1;font-size:12px;padding:4px 8px;border:1px solid #b39ddb;border-radius:var(--r);background:#fff">';
+    h+='</div>';
+    h+='<div style="font-size:10px;color:#5e35b1;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Observaciones</div>';
+    h+='<textarea class="motivo-castigo-txt" data-pg="'+pg+'" placeholder="Detalle del motivo, gestiones realizadas, soportes..." onclick="event.stopPropagation()" style="font-size:12px;min-height:56px;width:100%;border:1px solid #b39ddb;border-radius:var(--r);background:#fff">'+(p.motivoCastigoTxt||'')+'</textarea>';
+    h+='</div>';
+  }
   // Terminado fields
   if(est==='terminado'){
     h+='<div class="ir"><div class="ik">Motivo terminación</div>';
@@ -1765,6 +1790,8 @@ function setRadicado(pid,val){
 }
 function setJuzgado(pid,val){setField(pid,'juzgado',val);}
 function setMotivo(pid,val){setField(pid,'motivoTerminacion',val);}
+function setMotivoCastigo(pid,val){setField(pid,'motivoCastigo',val);}
+function setMotivoCastigoTxt(pid,val){setField(pid,'motivoCastigoTxt',val);}
 function setCostas(pid,val){setField(pid,'costas',val);}
 function setHonorarios(pid,pct){
   var p=pagares.find(function(x){return String(x.pagare)===String(pid);});
@@ -1824,6 +1851,8 @@ document.addEventListener('change',function(ev){
   if(t.classList.contains('abogado-sel')){setAbogado(pg,t.value);}
   else if(t.classList.contains('etapa-sel')){setEtapa(pg,t.value);}
   else if(t.classList.contains('motivo-sel')){setMotivo(pg,t.value);}
+  else if(t.classList.contains('motivo-castigo-sel')){setMotivoCastigo(pg,t.value);}
+  else if(t.classList.contains('fecha-castigo-inp')){setField(pg,'fechaCastigo',cleanDate(t.value));}
   else if(t.classList.contains('suspenso-hasta')){setSuspensoHasta(pg,t.value);}
   else if(t.classList.contains('pag-total-fecha')){setPagadoTotalFecha(pg,t.value);}
   else if(t.classList.contains('fecha-estado-inp')){setFechaEstado(pg,t.value);}
@@ -1844,6 +1873,7 @@ document.addEventListener('input',function(ev){
   if(t.classList.contains('hon-pct-inp')){setHonorarios(pg,t.value);}
   else if(t.classList.contains('radicado-inp')){setRadicado(pg,t.value);}
   else if(t.classList.contains('medidas-txt')){setMedidasTxt(pg,t.value);}
+  else if(t.classList.contains('motivo-castigo-txt')){setMotivoCastigoTxt(pg,t.value);}
   else if(t.classList.contains('tel2-inp')){setTel2(pg,t.value);}
   else if(t.classList.contains('email-inp')){setEmail(pg,t.value);}
   else if(t.classList.contains('juzgado-inp')){setJuzgado(pg,t.value);}
@@ -2121,6 +2151,17 @@ function renderInforme(){
     });
     h+='</div>';
   }
+  var castigados=pagares.filter(function(p){return p.estadoProceso==='castigo';});
+  if(castigados.length){
+    var porMotivoCas={};
+    castigados.forEach(function(p){var m=p.motivoCastigo?(MOTIVO_CASTIGO[p.motivoCastigo]||p.motivoCastigo):'Sin motivo';porMotivoCas[m]=(porMotivoCas[m]||0)+1;});
+    h+='<div style="padding-top:8px;border-top:1px solid var(--bdr2);margin-top:8px"><div style="font-size:11px;color:#5e35b1;font-weight:600;margin-bottom:6px">⚑ Castigados: '+castigados.length+'</div>';
+    h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">';
+    Object.entries(porMotivoCas).sort(function(a,b){return b[1]-a[1];}).forEach(function(e){
+      h+='<div class="ci"><div class="ci-l">'+e[0]+'</div><div class="ci-v" style="font-weight:600;color:#5e35b1">'+e[1]+'</div></div>';
+    });
+    h+='</div></div>';
+  }
   if(suspendidos.length){
     h+='<div style="padding-top:8px;border-top:1px solid var(--bdr2)"><div style="font-size:11px;color:var(--amber);font-weight:600;margin-bottom:6px">⏸ Suspendidos: '+suspendidos.length+'</div>';
     suspendidos.forEach(function(p){
@@ -2238,6 +2279,7 @@ function guardarNuevoPagare(){
     saldoCapital:getV('np-capital'),intereses:getV('np-intereses'),capitalizacion:getV('np-capitaliz'),totalDeuda:getV('np-total'),
     aportes:'',totalAportes:'',ahorros:'',estadoProceso:getV('np-estado')||'prejuridico',
     etapaJuridica:'',radicadoRama:'',fechaEstado:'',medidasCautelares:false,medidasTxt:'',motivoTerminacion:'',
+    motivoCastigo:'',motivoCastigoTxt:'',fechaCastigo:'',
     abogadoResponsable:getV('np-abogado'),honorariosPct:'',suspenso:false,suspensoHasta:'',
     abonos:[],pagadoTotal:false,pagadoTotalFecha:'',gastos:[],honCausados:[],costas:'',
     notifDemandado:false,notifCodeudores:[],vigiladoLitigio:false,vigiladoPropio:false,
